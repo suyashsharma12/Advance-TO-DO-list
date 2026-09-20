@@ -17,6 +17,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 .side-bottom{position:absolute;left:16px;right:16px;bottom:18px;display:grid;gap:8px}.mini-btn,.ghost,.icon-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px}.mini-btn{padding:9px 11px}
 .main{padding:26px;max-width:1500px;width:100%;margin:auto}.topbar{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:20px}.title h1{margin:0;font-size:30px}.title p{margin:6px 0 0;color:var(--muted)}.actions{display:flex;gap:9px;align-items:center}
 .icon-btn,.primary,.ghost{height:40px;padding:0 13px}.icon-btn{width:40px;padding:0}.primary{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;font-weight:700}.search{min-width:280px}.search input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text)}
+.quote-banner{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;margin-bottom:20px;background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.quote-mark{font-size:42px;line-height:.8;color:var(--accent);font-weight:800}.quote-text{font-size:17px;font-weight:750;line-height:1.45}.quote-sub{font-size:12px;color:var(--muted);margin-top:6px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.stat{padding:16px}.stat .k{font-size:13px;color:var(--muted)}.stat .v{font-size:28px;font-weight:800;margin-top:6px}.stat .s{font-size:12px;color:var(--muted);margin-top:3px}
 .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.panel-head h2{font-size:17px;margin:0}.muted{color:var(--muted)}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.toolbar select,.toolbar button{border:1px solid var(--border);background:var(--surface);color:var(--text);height:38px;border-radius:9px;padding:0 10px}
@@ -52,6 +53,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
     <div class="title"><h1>Good day 👋</h1><p id="dateText"></p></div>
     <div class="actions"><div class="search"><input id="search" placeholder="Search tasks…  ( / )"></div><button class="primary" id="addBtn">＋ Add task</button></div>
   </div>
+  <div class="quote-banner" id="quoteBanner">
+  <div class="quote-mark">“</div>
+  <div>
+    <div class="quote-text" id="dailyQuote"></div>
+    <div class="quote-sub">Your CAT 2026 goal is built one focused study session at a time.</div>
+  </div>
+</div>
   <section class="stats">
     <div class="card stat"><div class="k">Total tasks</div><div class="v" id="sTotal">0</div><div class="s">Everything in your workspace</div></div>
     <div class="card stat"><div class="k">Completed</div><div class="v" id="sDone">0</div><div class="s" id="sDoneText">0% completion</div></div>
@@ -172,6 +180,47 @@ $('#importBtn').onclick=function(){$('#fileInput').click()};$('#fileInput').onch
 $('#timerStart').onclick=function(){timer.running?pauseTimer():startTimer()};$('#timerReset').onclick=function(){pauseTimer();timer.mode='focus';timer.sec=timer.focusSec;$('#timerHours').value=Math.floor(timer.focusSec/3600);$('#timerMinutes').value=Math.floor((timer.focusSec%3600)/60);$('#timerMode').textContent=(timer.focusSec/3600>=1?(timer.focusSec/3600)+' hour focus session':(timer.focusSec/60)+' minute focus session');updateTimer()};$('#timerSet').onclick=function(){var h=Math.max(0,Number($('#timerHours').value)||0),m=Math.max(0,Math.min(59,Number($('#timerMinutes').value)||0));var seconds=Math.round((h*60+m)*60);if(seconds<=0)return toast('Set at least 1 minute');pauseTimer();timer.mode='focus';timer.focusSec=seconds;timer.sec=seconds;$('#timerMode').textContent=h>0?(h+(h===1?' hour':' hours'))+' '+(m?m+' min ':'')+'focus session':m+' minute focus session';updateTimer()};document.querySelectorAll('.preset').forEach(function(b){b.onclick=function(){pauseTimer();timer.mode='focus';timer.focusSec=Number(b.dataset.min)*60;timer.sec=timer.focusSec;$('#timerHours').value=Math.floor(Number(b.dataset.min)/60);$('#timerMinutes').value=Number(b.dataset.min)%60;$('#timerMode').textContent=Number(b.dataset.min)>=60?(Number(b.dataset.min)/60)+' hour focus session':Number(b.dataset.min)+' minute focus session';updateTimer()}});
 document.addEventListener('keydown',function(e){var tag=document.activeElement.tagName;if(e.key==='/'&&tag!=='INPUT'&&tag!=='TEXTAREA'){e.preventDefault();$('#search').focus()}if((e.key==='n'||e.key==='N')&&!e.ctrlKey&&!e.metaKey&&tag!=='INPUT'&&tag!=='TEXTAREA')openModal();if(e.key==='Escape')closeModal()});
 $('#dateText').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+var dailyQuotes=[
+  "You do not need a perfect day. You need a focused day.",
+  "One more RC. One more set. One more step toward CAT.",
+  "Your future percentile is being built by what you do today.",
+  "Consistency beats last-minute intensity. Keep showing up.",
+  "A difficult question is not a setback. It is training.",
+  "You are not studying for one exam; you are building your discipline.",
+  "Small improvements every day become a big result on exam day.",
+  "When motivation is low, let your routine do the work.",
+  "Do today's study so tomorrow's confidence comes naturally.",
+  "You cannot control the paper. You can control your preparation.",
+  "Every focused hour is an investment in the score you want.",
+  "Do not chase the clock. Chase understanding.",
+  "Your competition is temporary; the habits you build can stay for years.",
+  "One bad mock does not define you. Learn, adjust, and continue.",
+  "Accuracy first. Speed next. Consistency always.",
+  "Make today's plan simple enough to finish and strong enough to matter.",
+  "The goal is not to feel ready. The goal is to become ready.",
+  "Keep going. Difficult chapters become easy chapters with repetition.",
+  "A disciplined 2 hours today is better than a guilty 8 hours tomorrow.",
+  "Trust the process you are building, especially on ordinary days.",
+  "Every solved question reduces one more unknown.",
+  "CAT rewards preparation that compounds. Start the compounding today.",
+  "You are allowed to struggle. You are not allowed to stop learning.",
+  "Focus on the next question, not the entire journey.",
+  "Your score on the final day starts with the choices you make today.",
+  "Study with patience. Review with honesty. Repeat with discipline.",
+  "Progress can be quiet. Keep working even when nobody sees it.",
+  "The target is far less important than the next focused session.",
+  "Turn weak areas into familiar areas, one practice set at a time.",
+  "Your best preparation is built on ordinary days like today."
+];
+
+function showDailyQuote(){
+  var now=new Date(),start=new Date(now.getFullYear(),0,0);
+  var day=Math.floor((now-start)/86400000);
+  var quote=dailyQuotes[day%dailyQuotes.length];
+  $('#dailyQuote').textContent=quote;
+}
+showDailyQuote();
 render();updateTimer();
 </script>
 </body>
