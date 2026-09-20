@@ -1,1 +1,20 @@
-# Advanced To-Do\n\nA responsive, local-first productivity dashboard.\n\n## Features\n- Task add/edit/delete, priorities, categories, notes, due dates and estimates\n- Today, Upcoming, Overdue and Completed views\n- Search, filtering, sorting and drag-to-reorder\n- Productivity stats, weekly progress and completion streak\n- 25/5 focus timer\n- Dark/light mode\n- JSON backup export/import\n- Keyboard shortcuts: `/` search, `N` add, `Esc` close\n- No backend: data persists in browser LocalStorage\n\n## Deployment\nA GitHub Actions workflow is included for GitHub Pages.\n
+# Advanced To-Do
+
+A responsive, local-first productivity dashboard.
+
+## Features
+- Task add/edit/delete, priorities, categories, notes, due dates and estimates
+- Today, Upcoming, Overdue and Completed views
+- Search, filtering, sorting and drag-to-reorder
+- Productivity stats, weekly progress and completion streak
+- 25/5 focus timer
+- Dark/light mode
+- JSON backup export/import
+- Keyboard shortcuts: `/` search, `N` add, `Esc` close
+- No backend: data persists in browser LocalStorage
+
+## Deployment
+A GitHub Actions workflow publishes the static site to GitHub Pages.
+
+## Live URL
+https://suyashsharma12.github.io/Advance-TO-DO-list/
