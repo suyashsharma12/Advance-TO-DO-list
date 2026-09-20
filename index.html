@@ -70,7 +70,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
     </section>
     <aside style="display:grid;gap:18px">
       <section class="card panel"><div class="panel-head"><h2>Weekly progress</h2><span class="muted" id="weekPct">0%</span></div><div class="progress"><div class="bar" id="weekBar" style="width:0%"></div></div><div class="chart" id="chart"></div></section>
-      <section class="card panel"><div class="panel-head"><h2>Focus timer</h2><span class="muted">25 / 5</span></div><div class="pomodoro"><div><div class="timer" id="timer">25:00</div><small id="timerMode">Focus session</small></div><div style="display:flex;gap:7px"><button class="primary" id="timerStart">Start</button><button class="ghost" id="timerReset">Reset</button></div></div></section>
+      <section class="card panel"><div class="panel-head"><h2>Focus timer</h2><span class="muted">H:MM:SS</span></div><div class="pomodoro"><div><div class="timer" id="timer">01:00:00</div><small id="timerMode">1 hour focus session</small></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="ghost preset" data-min="25">25m</button><button class="ghost preset" data-min="60">1h</button><button class="ghost preset" data-min="120">2h</button><button class="primary" id="timerStart">Start</button><button class="ghost" id="timerReset">Reset</button></div></div></section>
       <section class="card panel"><div class="panel-head"><h2>Quick tips</h2></div><div class="muted" style="font-size:13px;line-height:1.7">Use <span class="kbd">/</span> to search, <span class="kbd">N</span> to add a task, and drag tasks to reorder them. Data is stored locally in your browser.</div></section>
     </aside>
   </div>
@@ -84,7 +84,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
       <div class="field"><label>Task title</label><input id="fTitle" maxlength="120" placeholder="e.g. Finish DSA practice set"></div>
       <div class="field"><label>Notes</label><textarea id="fNotes" rows="3" placeholder="Optional details…"></textarea></div>
       <div class="row"><div class="field"><label>Due date</label><input type="date" id="fDue"></div><div class="field"><label>Priority</label><select id="fPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div>
-      <div class="row"><div class="field"><label>Category</label><input id="fCategory" placeholder="Study, Work, Personal…"></div><div class="field"><label>Estimate (minutes)</label><input type="number" id="fEstimate" min="0" max="999" value="30"></div></div>
+      <div class="row"><div class="field"><label>Category</label><input id="fCategory" placeholder="Study, Work, Personal…"></div><div class="field"><label>Estimated time (hours)</label><input type="number" id="fEstimate" min="0" max="99" step="0.25" value="1"></div></div>
       <div class="modal-actions"><button class="ghost" id="cancelModal">Cancel</button><button class="primary" id="saveTask">Save task</button></div>
     </div>
   </div>
@@ -95,7 +95,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 var KEY='advancedTodo.v1';
 var state=JSON.parse(localStorage.getItem(KEY)||'null')||{tasks:[],theme:'light'};
 var currentView='all',editingId=null,dragId=null;
-var timer={sec:1500,running:false,mode:'focus',interval:null};
+var timer={sec:3600,running:false,mode:'focus',focusSec:3600,breakSec:300,interval:null};
 
 function $(s){return document.querySelector(s)}
 function pad(n){return String(n).padStart(2,'0')}
@@ -128,12 +128,12 @@ function renderTasks(){
  var box=$('#tasks');if(!arr.length){box.innerHTML='<div class="empty">No tasks here yet.<br><span style="font-size:12px">Add a task or change the filters.</span></div>';return}
  box.innerHTML=arr.map(function(t){
   var cls=t.priority==='medium'?'med':t.priority;
-  return '<article class="task '+(t.completed?'done':'')+'" draggable="true" data-id="'+t.id+'"><button class="check" aria-label="toggle" onclick="toggleTask(\''+t.id+'\')">'+(t.completed?'✓':'')+'</button><div><div class="task-title">'+escapeHtml(t.title)+'</div><div class="task-sub">'+escapeHtml(t.notes)+'</div><div class="chips">'+(t.due?'<span class="chip">'+(isOverdue(t)?'⚠ ':'📅 ')+fmtDate(t.due)+'</span>':'')+'<span class="chip priority-'+cls+'">'+t.priority+'</span>'+(t.category?'<span class="chip">'+escapeHtml(t.category)+'</span>':'')+(t.estimate?'<span class="chip">⏱ '+t.estimate+'m</span>':'')+'</div></div><div class="task-actions"><button onclick="editTask(\''+t.id+'\')">✎</button><button onclick="deleteTask(\''+t.id+'\')">🗑</button></div></article>';
+  return '<article class="task '+(t.completed?'done':'')+'" draggable="true" data-id="'+t.id+'"><button class="check" aria-label="toggle" onclick="toggleTask(\''+t.id+'\')">'+(t.completed?'✓':'')+'</button><div><div class="task-title">'+escapeHtml(t.title)+'</div><div class="task-sub">'+escapeHtml(t.notes)+'</div><div class="chips">'+(t.due?'<span class="chip">'+(isOverdue(t)?'⚠ ':'📅 ')+fmtDate(t.due)+'</span>':'')+'<span class="chip priority-'+cls+'">'+t.priority+'</span>'+(t.category?'<span class="chip">'+escapeHtml(t.category)+'</span>':'')+(t.estimate?'<span class="chip">⏱ '+t.estimate+'h</span>':'')+'</div></div><div class="task-actions"><button onclick="editTask(\''+t.id+'\')">✎</button><button onclick="deleteTask(\''+t.id+'\')">🗑</button></div></article>';
  }).join('');
  document.querySelectorAll('.task').forEach(function(el){el.addEventListener('dragstart',function(){dragId=el.dataset.id});el.addEventListener('dragover',function(e){e.preventDefault()});el.addEventListener('drop',function(){reorder(dragId,el.dataset.id)})});
 }
 function render(){document.body.classList.toggle('dark',state.theme==='dark');renderStats();renderChart();renderTasks()}
-function openModal(t){editingId=t?t.id:null;$('#modalTitle').textContent=t?'Edit task':'Add task';$('#fTitle').value=t?t.title:'';$('#fNotes').value=t?t.notes:'';$('#fDue').value=t?t.due:today();$('#fPriority').value=t?t.priority:'medium';$('#fCategory').value=t?t.category:'';$('#fEstimate').value=t?t.estimate:30;$('#modalBackdrop').classList.add('open');setTimeout(function(){$('#fTitle').focus()},30)}
+function openModal(t){editingId=t?t.id:null;$('#modalTitle').textContent=t?'Edit task':'Add task';$('#fTitle').value=t?t.title:'';$('#fNotes').value=t?t.notes:'';$('#fDue').value=t?t.due:today();$('#fPriority').value=t?t.priority:'medium';$('#fCategory').value=t?t.category:'';$('#fEstimate').value=t?t.estimate:1;$('#modalBackdrop').classList.add('open');setTimeout(function(){$('#fTitle').focus()},30)}
 function closeModal(){$('#modalBackdrop').classList.remove('open');editingId=null}
 function collectTask(){return{title:$('#fTitle').value.trim(),notes:$('#fNotes').value.trim(),due:$('#fDue').value,priority:$('#fPriority').value,category:$('#fCategory').value.trim(),estimate:Number($('#fEstimate').value)||0}}
 function saveTask(){
@@ -146,9 +146,9 @@ window.toggleTask=function(i){var t=state.tasks.find(function(x){return x.id===i
 window.editTask=function(i){openModal(state.tasks.find(function(x){return x.id===i}))}
 window.deleteTask=function(i){var t=state.tasks.find(function(x){return x.id===i});if(!confirm('Delete “'+t.title+'”?'))return;state.tasks=state.tasks.filter(function(x){return x.id!==i});save();render();toast('Task deleted')}
 function reorder(a,b){if(!a||a===b)return;var ai=state.tasks.findIndex(function(x){return x.id===a}),bi=state.tasks.findIndex(function(x){return x.id===b}),x=state.tasks.splice(ai,1)[0];state.tasks.splice(bi,0,x);save();renderTasks()}
-function updateTimer(){$('#timer').textContent=pad(Math.floor(timer.sec/60))+':'+pad(timer.sec%60)}
+function updateTimer(){var h=Math.floor(timer.sec/3600),m=Math.floor((timer.sec%3600)/60),s=timer.sec%60;$('#timer').textContent=pad(h)+':'+pad(m)+':'+pad(s)}
 function pauseTimer(){clearInterval(timer.interval);timer.running=false;$('#timerStart').textContent='Start'}
-function startTimer(){if(timer.running)return;timer.running=true;$('#timerStart').textContent='Pause';timer.interval=setInterval(function(){timer.sec--;if(timer.sec<=0){clearInterval(timer.interval);timer.running=false;toast(timer.mode==='focus'?'Focus session complete! Take a break.':'Break complete! Ready for another focus session.');timer.mode=timer.mode==='focus'?'break':'focus';timer.sec=timer.mode==='focus'?1500:300;$('#timerMode').textContent=timer.mode==='focus'?'Focus session':'Break';$('#timerStart').textContent='Start'}updateTimer()},1000)}
+function startTimer(){if(timer.running)return;timer.running=true;$('#timerStart').textContent='Pause';timer.interval=setInterval(function(){timer.sec--;if(timer.sec<=0){clearInterval(timer.interval);timer.running=false;toast(timer.mode==='focus'?'Focus session complete! Take a break.':'Break complete! Ready for another focus session.');timer.mode=timer.mode==='focus'?'break':'focus';timer.sec=timer.mode==='focus'?timer.focusSec:timer.breakSec;$('#timerMode').textContent=timer.mode==='focus'?(timer.focusSec/3600>=1?(timer.focusSec/3600)+' hour focus session':'Focus session'):'5 minute break';$('#timerStart').textContent='Start'}updateTimer()},1000)}
 $('#addBtn').onclick=function(){openModal()};$('#closeModal').onclick=closeModal;$('#cancelModal').onclick=closeModal;$('#saveTask').onclick=saveTask;$('#modalBackdrop').onclick=function(e){if(e.target===e.currentTarget)closeModal()};
 document.querySelectorAll('.nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.nav button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');currentView=b.dataset.view;renderTasks()}});
 $('#search').oninput=renderTasks;$('#priorityFilter').onchange=renderTasks;$('#sort').onchange=renderTasks;
@@ -156,7 +156,7 @@ $('#clearCompleted').onclick=function(){var n=state.tasks.filter(function(t){ret
 $('#themeBtn').onclick=function(){state.theme=state.theme==='dark'?'light':'dark';save();render()};
 $('#exportBtn').onclick=function(){var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='advanced-todo-backup.json';a.click();URL.revokeObjectURL(a.href);toast('Backup exported')};
 $('#importBtn').onclick=function(){$('#fileInput').click()};$('#fileInput').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var x=JSON.parse(r.result);if(!Array.isArray(x.tasks))throw 0;state={theme:x.theme||state.theme,tasks:x.tasks};save();render();toast('Backup imported')}catch(err){toast('Invalid backup file')}};r.readAsText(f);e.target.value=''};
-$('#timerStart').onclick=function(){timer.running?pauseTimer():startTimer()};$('#timerReset').onclick=function(){pauseTimer();timer.mode='focus';timer.sec=1500;$('#timerMode').textContent='Focus session';updateTimer()};
+$('#timerStart').onclick=function(){timer.running?pauseTimer():startTimer()};$('#timerReset').onclick=function(){pauseTimer();timer.mode='focus';timer.sec=timer.focusSec;$('#timerMode').textContent=(timer.focusSec/3600>=1?(timer.focusSec/3600)+' hour focus session':'Focus session');updateTimer()};document.querySelectorAll('.preset').forEach(function(b){b.onclick=function(){pauseTimer();timer.mode='focus';timer.focusSec=Number(b.dataset.min)*60;timer.sec=timer.focusSec;$('#timerMode').textContent=Number(b.dataset.min)>=60?(Number(b.dataset.min)/60)+' hour focus session':Number(b.dataset.min)+' minute focus session';updateTimer()}});
 document.addEventListener('keydown',function(e){var tag=document.activeElement.tagName;if(e.key==='/'&&tag!=='INPUT'&&tag!=='TEXTAREA'){e.preventDefault();$('#search').focus()}if((e.key==='n'||e.key==='N')&&!e.ctrlKey&&!e.metaKey&&tag!=='INPUT'&&tag!=='TEXTAREA')openModal();if(e.key==='Escape')closeModal()});
 $('#dateText').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 render();updateTimer();
