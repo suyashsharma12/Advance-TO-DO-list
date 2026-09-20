@@ -51,7 +51,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <main class="main">
   <div class="topbar">
     <div class="title"><h1>Good day 👋</h1><p id="dateText"></p></div>
-    <div class="actions"><div class="search"><input id="search" placeholder="Search tasks…  ( / )"></div><button class="ghost" id="companionBtn">🪟 Keep on top</button><button class="ghost" id="notifyBtn">🔔 Reminders</button><button class="primary" id="addBtn">＋ Add task</button></div>
+    <div class="actions"><div class="search"><input id="search" placeholder="Search tasks…  ( / )"></div><button class="ghost" id="companionBtn">🪟 Study Companion</button><button class="ghost" id="notifyBtn">🔔 Reminders</button><button class="primary" id="addBtn">＋ Add task</button></div>
   </div>
   <div class="quote-banner" id="quoteBanner">
   <div class="quote-mark">“</div>
@@ -169,7 +169,7 @@ window.deleteTask=function(i){var t=state.tasks.find(function(x){return x.id===i
 function reorder(a,b){if(!a||a===b)return;var ai=state.tasks.findIndex(function(x){return x.id===a}),bi=state.tasks.findIndex(function(x){return x.id===b}),x=state.tasks.splice(ai,1)[0];state.tasks.splice(bi,0,x);save();renderTasks()}
 function updateTimer(){var h=Math.floor(timer.sec/3600),m=Math.floor((timer.sec%3600)/60),s=timer.sec%60;$('#timer').textContent=pad(h)+':'+pad(m)+':'+pad(s)}
 function pauseTimer(){clearInterval(timer.interval);timer.running=false;$('#timerStart').textContent='Start';broadcastTimer();renderCompanion()}
-function startTimer(){if(timer.running)return;timer.running=true;$('#timerStart').textContent='Pause';broadcastTimer();renderCompanion();timer.interval=setInterval(function(){timer.sec--;if(timer.sec<=0){clearInterval(timer.interval);timer.running=false;toast(timer.mode==='focus'?'Focus session complete! Take a break.':'Break complete! Ready for another focus session.');timer.mode=timer.mode==='focus'?'break':'focus';timer.sec=timer.mode==='focus'?timer.focusSec:timer.breakSec;$('#timerMode').textContent=timer.mode==='focus'?(timer.focusSec/3600>=1?(timer.focusSec/3600)+' hour focus session':'Focus session'):'5 minute break';$('#timerStart').textContent='Start'}updateTimer()},1000)}
+function startTimer(){if(timer.running)return;timer.running=true;$('#timerStart').textContent='Pause';broadcastTimer();renderCompanion();timer.interval=setInterval(function(){timer.sec--;if(timer.sec<=0){clearInterval(timer.interval);timer.running=false;toast(timer.mode==='focus'?'Focus session complete! Take a break.':'Break complete! Ready for another focus session.');sendTimerNotification(timer.mode==='focus'?'Focus session complete 🎯':'Break complete ☕',timer.mode==='focus'?'Great work. Take a short break before your next study block.':'Break finished. Start your next focused study block.');timer.mode=timer.mode==='focus'?'break':'focus';timer.sec=timer.mode==='focus'?timer.focusSec:timer.breakSec;$('#timerMode').textContent=timer.mode==='focus'?(timer.focusSec/3600>=1?(timer.focusSec/3600)+' hour focus session':'Focus session'):'5 minute break';$('#timerStart').textContent='Start'}updateTimer()},1000)}
 var companionWin=null, companionChannel=('BroadcastChannel' in window)?new BroadcastChannel('advanced-todo-study-sync'):null, reminderLast=Number(localStorage.getItem('advancedTodo.lastReminder')||0);
 
 function taskStatusLabel(t){return t.status==='fully'?'Fully completed':t.status==='partial'?'Partially completed':t.status==='not'?'Not completed':'Pending'}
@@ -207,14 +207,13 @@ async function openStudyCompanion(){
  if(!('documentPictureInPicture' in window)){toast('Always-on-top companion is not supported in this browser.');return}
  try{
    if(companionWin&&!companionWin.closed){renderCompanion();return}
-   if(timer.running)pauseTimer();
    companionWin=await window.documentPictureInPicture.requestWindow({width:390,height:620,preferInitialWindowPlacement:true});
    var styles='';
    for(var i=0;i<document.styleSheets.length;i++){try{styles+=Array.from(document.styleSheets[i].cssRules).map(function(r){return r.cssText}).join('')}catch(e){}}
    companionWin.document.head.innerHTML='<title>CAT Study Companion</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+styles+'</style><style>body{padding:14px!important;background:var(--bg);overflow:auto}.pip-wrap{display:grid;gap:12px}.pip-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)}.pip-brand{font-weight:800;font-size:16px}.pip-timer{font-size:50px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;margin:4px 0}.pip-center{text-align:center}.pip-actions{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}.pip-actions button{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:9px;padding:8px 10px}.pip-actions .pip-main{background:var(--accent);border-color:var(--accent);color:#fff}.pip-quote{font-size:14px;font-weight:700;line-height:1.4}.pip-task{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}.pip-task:last-child{border-bottom:0}.pip-task b{font-size:12px}.pip-task small{display:block;color:var(--muted);margin-top:3px}.pip-task span{font-size:10px;padding:4px 6px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}.pip-task.fully span{color:#166534;background:#dcfce7}.pip-task.partial span{color:#92400e;background:#fef3c7}.pip-task.not span{color:#991b1b;background:#fee2e2}.pip-empty{color:var(--muted);font-size:12px;text-align:center;padding:15px}</style>';
    companionWin.document.body.innerHTML='<div class="pip-wrap"><div class="pip-card pip-center"><div class="pip-brand">🎯 CAT Study Companion</div><div id="pipTimer" class="pip-timer">'+timerLabel(timer.sec)+'</div><div id="pipMode" class="muted">'+(timer.running?'Focused study session':'Paused')+'</div><div class="pip-actions"><button id="pipStart" class="pip-main">Start / Pause</button><button id="pipReset">Reset</button></div></div><div class="pip-card"><div style="font-weight:800;margin-bottom:8px">🔥 Today\'s Study Tasks</div><div id="pipTasks"></div></div><div class="pip-card"><div style="font-size:11px;color:var(--muted);margin-bottom:5px">TODAY\'S MOTIVATION</div><div id="pipQuote" class="pip-quote"></div></div></div>';
-   companionWin.document.getElementById('pipStart').onclick=function(){window.opener.toggleMainTimerFromCompanion()};
-   companionWin.document.getElementById('pipReset').onclick=function(){window.opener.resetMainTimerFromCompanion()};
+   companionWin.document.getElementById('pipStart').onclick=function(){toggleMainTimerFromCompanion()};
+   companionWin.document.getElementById('pipReset').onclick=function(){resetMainTimerFromCompanion()};
    companionWin.addEventListener('pagehide',function(){closeCompanion(false)});
    renderCompanion();
    toast('Study Companion opened — it stays on top of other windows.');
@@ -234,6 +233,9 @@ window.resetMainTimerFromCompanion=function(){
 function requestDesktopReminders(){
  if(!('Notification' in window)){toast('Desktop notifications are not supported here.');return}
  Notification.requestPermission().then(function(p){toast(p==='granted'?'Desktop reminders enabled 🔔':'Notifications were not enabled')});
+}
+function sendTimerNotification(title,body){
+ if('Notification' in window && Notification.permission==='granted'){try{new Notification(title,{body:body})}catch(e){}}
 }
 function maybeRemind(){
  if(!('Notification' in window)||Notification.permission!=='granted')return;
