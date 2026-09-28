@@ -119,7 +119,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 
 <script>
 var KEY='advancedTodo.v1';
-var state=JSON.parse(localStorage.getItem(KEY)||'null')||{tasks:[],theme:'light'};
+var state;
+try{state=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){state=null}
+if(!state||!Array.isArray(state.tasks))state={tasks:[],theme:'light'};
 var currentView='all',editingId=null,dragId=null;
 var timer={sec:3600,running:false,mode:'focus',focusSec:3600,breakSec:300,interval:null};
 function normalizeState(){
@@ -354,9 +356,11 @@ function bearPerformanceBlock(range){
 
 function initStudyAnalytics(){
  state.dailySessions=state.dailySessions||{};
- var d=$('#dailyView');if(d){d.dataset.date=today();d.dataset.quantGroup='Arithmetic';renderDaily();bindDailyEvents()}
- var p=$('#performanceView');if(p){p.dataset.range='14';renderPerformance();p.onchange=function(e){if(e.target.id==='perfRange'){p.dataset.range=e.target.value;renderPerformance()}}}
- var b=$('#bearView');if(b){b.dataset.date=today();renderBear()}
+ state.bearTargets=state.bearTargets||Object.assign({},BEAR_DEFAULT_TARGETS);
+ state.bearRecords=state.bearRecords||{};
+ var d=$('#dailyView');if(d){d.dataset.date=today();d.dataset.quantGroup='Arithmetic'}
+ var p=$('#performanceView');if(p){p.dataset.range='14';p.onchange=function(e){if(e.target.id==='perfRange'){p.dataset.range=e.target.value;renderPerformance()}}}
+ var b=$('#bearView');if(b){b.dataset.date=today()}
 }
 
 function showMainSection(view){
@@ -488,8 +492,9 @@ function activateSection(view){
  if(daily)daily.style.display=view==='daily'?'block':'none';
  if(perf)perf.style.display=view==='performance'?'block':'none';
  try{
-   if(view==='daily'){renderDaily();bindDailyEvents();window.scrollTo({top:0,behavior:'smooth'});}
-   else if(view==='performance'){renderPerformance();window.scrollTo({top:0,behavior:'smooth'});}
+   if(view==='daily'){if($('#dailyView').dataset.date===undefined)$('#dailyView').dataset.date=today();if($('#dailyView').dataset.quantGroup===undefined)$('#dailyView').dataset.quantGroup='Arithmetic';renderDaily();bindDailyEvents();window.scrollTo({top:0,behavior:'smooth'});}
+   else if(view==='performance'){if($('#performanceView').dataset.range===undefined)$('#performanceView').dataset.range='14';renderPerformance();window.scrollTo({top:0,behavior:'smooth'});}
+   else if(view==='bear'){if($('#bearView').dataset.date===undefined)$('#bearView').dataset.date=today();renderBear();window.scrollTo({top:0,behavior:'smooth'});}
    else {renderTasks();window.scrollTo({top:0,behavior:'smooth'});}
  }catch(err){console.error(err);toast('Daily Session could not open. Please refresh once.');}
 }
