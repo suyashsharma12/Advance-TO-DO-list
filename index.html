@@ -99,7 +99,76 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 </div>
 <section id="dailyView" class="section-view" style="display:none"></section>
 <section id="performanceView" class="section-view" style="display:none"></section>
-<section id="bearView" class="section-view" style="display:none"></section>
+<section id="bearView" class="section-view" style="display:none">
+  <div class="section-head">
+    <div>
+      <h2>🛡️ Bear Minimum</h2>
+      <p>Daily non-negotiable study floor. <b>1</b> means every minimum is completed. <b>0</b> means at least one minimum is missed.</p>
+    </div>
+    <div class="bear-date-row"><input id="bearDate" type="date"></div>
+  </div>
+
+  <div class="bear-kpis">
+    <div class="card bear-kpi"><div class="big" id="bearScore">0</div><div class="small">Daily score (1 / 0)</div></div>
+    <div class="card bear-kpi"><div class="big" id="bearMet">0/7</div><div class="small">Minimums met</div></div>
+    <div class="card bear-kpi"><div class="big" id="bearStreak">0</div><div class="small">Current streak</div></div>
+    <div class="card bear-kpi"><div class="big" id="bearWins">0/30</div><div class="small">Successful days</div></div>
+  </div>
+
+  <section class="card panel">
+    <div class="panel-head">
+      <h2 id="bearStatusTitle">🔴 Bear Minimum NOT Cleared</h2>
+      <span class="muted" id="bearStatusDate"></span>
+    </div>
+
+    <div class="bear-score-card">
+      <div class="bear-score zero" id="bearScoreCircle">0</div>
+      <div>
+        <div class="bear-score-title" id="bearStatusText">Complete every minimum to get 1.</div>
+        <div class="bear-score-sub">This page starts with 0 when today's work has not been recorded. It becomes 1 only when every minimum is satisfied.</div>
+      </div>
+      <strong id="bearMetBig">0 / 7</strong>
+    </div>
+
+    <div class="bear-progress" id="bearMainProgress"></div>
+
+    <div class="bear-check">
+      <input type="checkbox" id="bearCr" data-bear-manual="cr">
+      <div><b>CR practice</b><span>Default minimum: 10 questions</span></div>
+      <strong id="bearCrState">0</strong>
+    </div>
+    <div class="bear-check">
+      <input type="checkbox" id="bearGeometry" data-bear-manual="geometry">
+      <div><b>Geometry study</b><span>Default minimum: 30 minutes</span></div>
+      <strong id="bearGeometryState">0</strong>
+    </div>
+    <div class="bear-check">
+      <input type="checkbox" id="bearLog" data-bear-manual="log">
+      <div><b>Log / logarithms</b><span>Default minimum: 35 minutes</span></div>
+      <strong id="bearLogState">0</strong>
+    </div>
+
+    <div class="bear-setup">
+      <div class="bear-setup-title">⚙ Customize daily minimums</div>
+      <div class="bear-targets">
+        <div class="bear-target"><div><strong>VARC — RC</strong><small>RC passages/questions</small></div><div><input class="bear-target-input" data-target="rc" type="number" min="0" value="4"><span class="muted">RC</span></div></div>
+        <div class="bear-target"><div><strong>VARC — VA</strong><small>VA questions</small></div><div><input class="bear-target-input" data-target="va" type="number" min="0" value="8"><span class="muted">Q</span></div></div>
+        <div class="bear-target"><div><strong>DILR</strong><small>Sets completed</small></div><div><input class="bear-target-input" data-target="dilr" type="number" min="0" value="2"><span class="muted">sets</span></div></div>
+        <div class="bear-target"><div><strong>Quant</strong><small>Questions completed</small></div><div><input class="bear-target-input" data-target="quant" type="number" min="0" value="30"><span class="muted">Q</span></div></div>
+        <div class="bear-target"><div><strong>CR</strong><small>Practice questions</small></div><div><input class="bear-target-input" data-target="cr" type="number" min="0" value="10"><span class="muted">Q</span></div></div>
+        <div class="bear-target"><div><strong>Geometry</strong><small>Study duration</small></div><div><input class="bear-target-input" data-target="geometry" type="number" min="0" value="30"><span class="muted">min</span></div></div>
+        <div class="bear-target"><div><strong>Log / logarithms</strong><small>Study duration</small></div><div><input class="bear-target-input" data-target="log" type="number" min="0" value="35"><span class="muted">min</span></div></div>
+      </div>
+      <div class="bear-save"><span class="save-state" id="bearSaved">Targets and checks save automatically</span><button class="primary" id="saveBearTargets">Save targets</button></div>
+    </div>
+  </section>
+
+  <section class="card chart-card" style="margin-top:16px">
+    <div class="panel-head"><h2>📅 30-Day Bear Minimum Tracker</h2><span class="muted" id="bearHistorySummary">0 successful days</span></div>
+    <div class="bear-history" id="bearHistoryList"></div>
+    <div class="bear-note">1 = every minimum completed. 0 = at least one minimum missed. The tracker is calculated from your Daily Session records and the three manual checks.</div>
+  </section>
+</section>
 </main>
 </div>
 
@@ -408,7 +477,7 @@ function showMainSection(view){
  if(view==='bear')renderBear();
  if(isDashboard)renderTasks();
 }
-function render(){document.body.classList.toggle('dark',state.theme==='dark');renderStats();renderChart();renderTasks();if($('#dailyView')&&$('#dailyView').style.display!=='none')renderDaily();if($('#performanceView')&&$('#performanceView').style.display!=='none')renderPerformance();if($('#bearView')&&$('#bearView').style.display!=='none')renderBear()}
+function render(){document.body.classList.toggle('dark',state.theme==='dark');renderStats();renderChart();renderTasks();if($('#dailyView')&&$('#dailyView').style.display!=='none')renderDaily();if($('#performanceView')&&$('#performanceView').style.display!=='none')renderPerformance();if($('#bearView')&&$('#bearView').style.display!=='none')refreshBearPage()}
 function openModal(t){editingId=t?t.id:null;$('#modalTitle').textContent=t?'Edit task':'Add task';$('#fTitle').value=t?t.title:'';$('#fNotes').value=t?t.notes:'';$('#fDue').value=t?t.due:today();$('#fPriority').value=t?t.priority:'medium';$('#fCategory').value=t?t.category:'';$('#fEstimate').value=t?t.estimate:1;$('#modalBackdrop').classList.add('open');setTimeout(function(){$('#fTitle').focus()},30)}
 function closeModal(){$('#modalBackdrop').classList.remove('open');editingId=null}
 function collectTask(){return{title:$('#fTitle').value.trim(),notes:$('#fNotes').value.trim(),due:$('#fDue').value,priority:$('#fPriority').value,category:$('#fCategory').value.trim(),estimate:Number($('#fEstimate').value)||0}}
@@ -517,6 +586,94 @@ setInterval(function(){renderCompanion();maybeRemind()},1000);
 window.addEventListener('beforeunload',function(){try{if(companionChannel)companionChannel.close()}catch(e){}});
 
 $('#addBtn').onclick=function(){openModal()};$('#closeModal').onclick=closeModal;$('#cancelModal').onclick=closeModal;$('#saveTask').onclick=saveTask;$('#modalBackdrop').onclick=function(e){if(e.target===e.currentTarget)closeModal()};
+
+function refreshBearPage(){
+  var host=$('#bearView');if(!host)return;
+  try{
+    var dateEl=$('#bearDate');
+    var date=dateEl&&dateEl.value?dateEl.value:(host.dataset.date||today());
+    host.dataset.date=date;
+    if(dateEl)dateEl.value=date;
+
+    var targets=getBearTargets();
+    var s=getSession(date);
+    var record=getBearRecord(date);
+
+    // Keep the three manual checks synced to the selected date.
+    var cr=$('#bearCr'),geo=$('#bearGeometry'),log=$('#bearLog');
+    if(cr)cr.checked=!!record.cr;
+    if(geo)geo.checked=!!record.geometry;
+    if(log)log.checked=!!record.log;
+
+    // The first four items are calculated directly from Daily Session.
+    var items=[
+      {label:'VARC — RC',done:rcDone(s),target:Number(targets.rc)||0,unit:'RC'},
+      {label:'VARC — VA',done:vaDone(s),target:Number(targets.va)||0,unit:'Q'},
+      {label:'DILR sets',done:dilrDone(s),target:Number(targets.dilr)||0,unit:'sets'},
+      {label:'Quant questions',done:quantDone(s),target:Number(targets.quant)||0,unit:'Q'},
+      {label:'CR practice',done:record.cr?Number(targets.cr):0,target:Number(targets.cr)||0,unit:'Q',manual:true},
+      {label:'Geometry study',done:record.geometry?Number(targets.geometry):0,target:Number(targets.geometry)||0,unit:'min',manual:true},
+      {label:'Log / logarithms',done:record.log?Number(targets.log):0,target:Number(targets.log)||0,unit:'min',manual:true}
+    ];
+    items.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
+    var score=items.every(function(x){return x.met})?1:0;
+    var met=items.filter(function(x){return x.met}).length;
+
+    $('#bearScore').textContent=score;
+    $('#bearScoreCircle').textContent=score;
+    $('#bearScoreCircle').className='bear-score '+(score?'one':'zero');
+    $('#bearMet').textContent=met+'/7';
+    $('#bearMetBig').textContent=met+' / 7';
+    $('#bearStatusDate').textContent=date;
+    $('#bearStatusTitle').textContent=score?'🟢 Bear Minimum CLEARED':'🔴 Bear Minimum NOT Cleared';
+    $('#bearStatusText').textContent=score?'Every minimum was completed for this day.':'Complete every minimum to turn this day into 1.';
+
+    $('#bearMainProgress').innerHTML=items.map(function(x){
+      var pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
+      return '<div class="bear-progress-row"><b>'+escapeHtml(x.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>';
+    }).join('');
+
+    $('#bearCrState').textContent=record.cr?'1':'0';
+    $('#bearGeometryState').textContent=record.geometry?'1':'0';
+    $('#bearLogState').textContent=record.log?'1':'0';
+
+    var history=bearHistory(30,date);
+    var wins=history.filter(function(x){return x.score===1}).length;
+    $('#bearWins').textContent=wins+'/30';
+    $('#bearStreak').textContent=bearStreak(date);
+    $('#bearHistorySummary').textContent=wins+' successful days';
+
+    $('#bearHistoryList').innerHTML=history.slice().reverse().map(function(x){
+      var pct=Math.min(100,x.targetTotal>0?(x.total/x.targetTotal)*100:0);
+      return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(x.score?'one':'zero')+'">'+x.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+pct+'%"></div></div><span class="bear-history-val">'+Math.round(pct)+'%</span></div>';
+    }).join('');
+  }catch(err){
+    console.error('Bear refresh failed',err);
+    var host2=$('#bearView');
+    if(host2 && !host2.innerHTML.trim()){
+      host2.innerHTML='<section class="card panel"><h2>🛡️ Bear Minimum</h2><p>Today score: <b>0</b></p><p>Complete all minimums to change the score to <b>1</b>.</p></section>';
+    }
+  }
+}
+function bindBearStaticEvents(){
+  var host=$('#bearView');if(!host||host.dataset.bound==='1')return;
+  host.dataset.bound='1';
+  var dateEl=$('#bearDate');if(dateEl)dateEl.addEventListener('change',function(){host.dataset.date=dateEl.value;refreshBearPage()});
+  var saveBtn=$('#saveBearTargets');if(saveBtn)saveBtn.addEventListener('click',function(){
+    var t=getBearTargets();
+    document.querySelectorAll('#bearView .bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});
+    state.bearTargets=t;save();refreshBearPage();renderPerformance();toast('Bear minimum targets saved');
+  });
+  [['bearCr','cr'],['bearGeometry','geometry'],['bearLog','log']].forEach(function(pair){
+    var el=$('#'+pair[0]);if(el)el.addEventListener('change',function(){
+      var r=getBearRecord(activeBearDate());
+      r[pair[1]]=el.checked;
+      state.bearRecords[activeBearDate()]=r;save();refreshBearPage();renderPerformance();
+    });
+  });
+}
+function activeBearDate(){var e=$('#bearDate');return e&&e.value?e.value:($('#bearView').dataset.date||today())}
+
 function activateSection(view){
  currentView=view;
  document.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('active',x.dataset.view===view)});
@@ -524,12 +681,14 @@ function activateSection(view){
  if(dashboard)dashboard.style.display=(view==='daily'||view==='performance'||view==='bear')?'none':'block';
  if(daily)daily.style.display=view==='daily'?'block':'none';
  if(perf)perf.style.display=view==='performance'?'block':'none';
+ if(bear)bear.style.display=view==='bear'?'block':'none';
  try{
-   if(view==='daily'){if($('#dailyView').dataset.date===undefined)$('#dailyView').dataset.date=today();if($('#dailyView').dataset.quantGroup===undefined)$('#dailyView').dataset.quantGroup='Arithmetic';renderDaily();bindDailyEvents();window.scrollTo({top:0,behavior:'smooth'});}
-   else if(view==='performance'){if($('#performanceView').dataset.range===undefined)$('#performanceView').dataset.range='14';renderPerformance();window.scrollTo({top:0,behavior:'smooth'});}
-   else if(view==='bear'){if($('#bearView').dataset.date===undefined)$('#bearView').dataset.date=today();renderBear();window.scrollTo({top:0,behavior:'smooth'});}
-   else {renderTasks();window.scrollTo({top:0,behavior:'smooth'});}
- }catch(err){console.error(err);toast(view==='daily'?'Daily Session could not open.':view==='performance'?'Performance could not open.':view==='bear'?'Bear Minimum could not open.':'Could not open this section.');}
+   if(view==='daily'){if(!daily.dataset.date)daily.dataset.date=today();if(!daily.dataset.quantGroup)daily.dataset.quantGroup='Arithmetic';renderDaily();bindDailyEvents();}
+   else if(view==='performance'){if(!perf.dataset.range)perf.dataset.range='14';renderPerformance();}
+   else if(view==='bear'){if(!bear.dataset.date)bear.dataset.date=today();bindBearStaticEvents();refreshBearPage();}
+   else {renderTasks();}
+   window.scrollTo({top:0,behavior:'smooth'});
+ }catch(err){console.error(err);toast('Could not open this section.');}
 }
 function showMainSection(view){activateSection(view)}
 document.querySelectorAll('.nav button').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();activateSection(b.dataset.view)})});
