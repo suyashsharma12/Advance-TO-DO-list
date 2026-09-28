@@ -263,7 +263,7 @@ function renderPerformance(){
 }
 function copyPreviousDay(){
  var date=activeStudyDate(),d=new Date(date+'T12:00:00');d.setDate(d.getDate()-1);var prev=d.toISOString().slice(0,10);
- var src=getSession(prev);state.dailySessions[date]=JSON.parse(JSON.stringify(src));save();renderDaily();updateDailySummary();toast('Previous day copied — adjust today's numbers.');
+ var src=getSession(prev);state.dailySessions[date]=JSON.parse(JSON.stringify(src));save();renderDaily();updateDailySummary();toast("Previous day copied — adjust today's numbers.");
 }
 function bindDailyEvents(){
  var host=$('#dailyView');if(!host)return;
