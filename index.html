@@ -344,7 +344,12 @@ function bindBearEvents(){
 function bearPerformanceBlock(range){
  var days=bearHistory(range,today()),wins=days.filter(function(x){return x.score===1}).length,best=0,cur=0;
  days.forEach(function(x){if(x.score===1){cur++;if(cur>best)best=cur}else cur=0});
- return '<section class="card chart-card" style="margin-top:16px"><div class="panel-head"><h2>🛡️ Bear Minimum Performance</h2><span class="muted">'+wins+'/'+range+' days = '+Math.round(wins/range*100)+'%</span></div><div class="day-chart">'+days.map(function(x){return '<div class="day-row"><span class="day-label">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><div class="day-stack"><div class="seg-quant" style="width:'+(x.score?100:4)+'%"></div></div><b class="day-total">'+x.score+'</b></div>}).join('')+'</div><div class="day-note">1 = every bear-minimum target met · 0 = at least one target missed · Best streak in this range: '+best+' day'+(best===1?'':'s')+'.</div></section>';
+ var bars=days.map(function(x){
+   var label=new Date(x.date+"T12:00:00").toLocaleDateString(undefined,{day:"2-digit",month:"short"});
+   var width=x.score?100:4;
+   return "<div class=\"day-row\"><span class=\"day-label\">"+label+"</span><div class=\"day-stack\"><div class=\"seg-quant\" style=\"width:"+width+"%\"></div></div><b class=\"day-total\">"+x.score+"</b></div>";
+ }).join("");
+ return "<section class=\"card chart-card\" style=\"margin-top:16px\"><div class=\"panel-head\"><h2>🛡️ Bear Minimum Performance</h2><span class=\"muted\">"+wins+"/"+range+" days = "+Math.round(wins/range*100)+"%</span></div><div class=\"day-chart\">"+bars+"</div><div class=\"day-note\">1 = every bear-minimum target met · 0 = at least one target missed · Best streak in this range: "+best+" day"+(best===1?"":"s")+".</div></section>";
 }
 
 function initStudyAnalytics(){
