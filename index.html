@@ -13,7 +13,7 @@ body.dark{--bg:#0b1020;--surface:#111827;--surface2:#182235;--text:#f3f4f6;--mut
 button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:260px 1fr}
 .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:22px 16px;position:sticky;top:0;height:100vh}
 .brand{font-weight:800;font-size:20px;display:flex;align-items:center;gap:10px;margin:2px 8px 26px}.brand-dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 5px rgba(91,92,240,.12)}
-.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:var(--muted);padding:11px 12px;border-radius:11px;text-align:left;display:flex;justify-content:space-between;align-items:center}.nav button:hover,.nav button.active{background:var(--surface2);color:var(--text)}.nav span{display:flex;gap:10px;align-items:center}
+.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:var(--muted);padding:11px 12px;border-radius:11px;text-align:left;display:flex;justify-content:space-between;align-items:center}.nav button:hover,.nav button.active{background:var(--surface2);color:var(--text)}.nav button.active{box-shadow:inset 3px 0 0 var(--accent);font-weight:700}.nav span{display:flex;gap:10px;align-items:center}
 .side-bottom{position:absolute;left:16px;right:16px;bottom:18px;display:grid;gap:8px}.mini-btn,.ghost,.icon-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px}.mini-btn{padding:9px 11px}
 .main{padding:26px;max-width:1500px;width:100%;margin:auto}.topbar{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:20px}.title h1{margin:0;font-size:30px}.title p{margin:6px 0 0;color:var(--muted)}.actions{display:flex;gap:9px;align-items:center}
 .icon-btn,.primary,.ghost{height:40px;padding:0 13px}.icon-btn{width:40px;padding:0}.primary{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;font-weight:700}.search{min-width:280px}.search input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text)}
@@ -412,7 +412,21 @@ setInterval(function(){renderCompanion();maybeRemind()},1000);
 window.addEventListener('beforeunload',function(){try{if(companionChannel)companionChannel.close()}catch(e){}});
 
 $('#addBtn').onclick=function(){openModal()};$('#closeModal').onclick=closeModal;$('#cancelModal').onclick=closeModal;$('#saveTask').onclick=saveTask;$('#modalBackdrop').onclick=function(e){if(e.target===e.currentTarget)closeModal()};
-document.querySelectorAll('.nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.nav button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');currentView=b.dataset.view;showMainSection(currentView)}});
+function activateSection(view){
+ currentView=view;
+ document.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('active',x.dataset.view===view)});
+ var dashboard=$('#dashboardView'),daily=$('#dailyView'),perf=$('#performanceView');
+ if(dashboard)dashboard.style.display=(view==='daily'||view==='performance')?'none':'block';
+ if(daily)daily.style.display=view==='daily'?'block':'none';
+ if(perf)perf.style.display=view==='performance'?'block':'none';
+ try{
+   if(view==='daily'){renderDaily();bindDailyEvents();window.scrollTo({top:0,behavior:'smooth'});}
+   else if(view==='performance'){renderPerformance();window.scrollTo({top:0,behavior:'smooth'});}
+   else {renderTasks();window.scrollTo({top:0,behavior:'smooth'});}
+ }catch(err){console.error(err);toast('Daily Session could not open. Please refresh once.');}
+}
+function showMainSection(view){activateSection(view)}
+document.querySelectorAll('.nav button').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();activateSection(b.dataset.view)})});
 $('#search').oninput=renderTasks;$('#priorityFilter').onchange=renderTasks;$('#sort').onchange=renderTasks;
 $('#clearCompleted').onclick=function(){var n=state.tasks.filter(function(t){return t.completed}).length;if(!n)return toast('Nothing fully completed to clear');if(confirm('Remove '+n+' fully completed task'+(n>1?'s':'')+'?')){state.tasks=state.tasks.filter(function(t){return t.status!=='fully'});save();render();toast('Completed tasks cleared')}};
 $('#themeBtn').onclick=function(){state.theme=state.theme==='dark'?'light':'dark';save();render()};
