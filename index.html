@@ -314,23 +314,55 @@ function bearMetrics(date){
 function bearStreak(endDate){var d=new Date(endDate+'T12:00:00'),n=0;while(true){var ds=d.toISOString().slice(0,10);if(bearMetrics(ds).score!==1)break;n++;d.setDate(d.getDate()-1)}return n}
 function bearHistory(days,endDate){var out=[],d=new Date(endDate+'T12:00:00');for(var i=days-1;i>=0;i--){var x=new Date(d);x.setDate(d.getDate()-i);var ds=x.toISOString().slice(0,10),m=bearMetrics(ds);out.push({date:ds,score:m.score,rows:m.rows,total:m.rows.reduce(function(a,r){return a+r.done},0),targetTotal:m.rows.reduce(function(a,r){return a+r.target},0)})}return out}
 function renderBear(){
- var host=$('#bearView');if(!host)return;var date=host.dataset.date||today();host.dataset.date=date;var t=getBearTargets(),m=bearMetrics(date),h=bearHistory(30,date),wins=h.filter(function(x){return x.score===1}).length,streak=bearStreak(date),met=m.rows.filter(function(x){return x.met}).length,record=getBearRecord(date);
- host.innerHTML='<div class="section-head"><div><h2>🛡️ Bear Minimum</h2><p>Your non-negotiable daily floor. Score is <b>1</b> only when every minimum is met; otherwise it is <b>0</b>.</p></div><div class="bear-date-row"><input id="bearDate" type="date" value="'+date+'"></div></div>'+
- '<div class="bear-kpis"><div class="card bear-kpi"><div class="big">'+m.score+'</div><div class="small">Daily score (1 / 0)</div></div><div class="card bear-kpi"><div class="big">'+met+'/'+m.rows.length+'</div><div class="small">Minimums met</div></div><div class="card bear-kpi"><div class="big">'+streak+'</div><div class="small">Current streak</div></div><div class="card bear-kpi"><div class="big">'+wins+'/30</div><div class="small">Successful days</div></div></div>'+
- '<section class="card panel"><div class="panel-head"><h2>Today\'s Bear Minimum</h2><span class="muted">'+date+'</span></div>'+
- '<div class="bear-score-card"><div class="bear-score '+(m.score?'one':'zero')+'">'+m.score+'</div><div><div class="bear-score-title">'+(m.score?'BEAR MINIMUM CLEARED 🟢':'BEAR MINIMUM NOT CLEARED 🔴')+'</div><div class="bear-score-sub">'+(m.score?'Every configured minimum was reached.':'Reach every target below to turn this day into 1.')+'</div></div><strong>'+met+' / '+m.rows.length+'</strong></div>'+
- '<div class="metric-list" style="margin-top:12px">'+m.rows.slice(0,4).map(function(x){var pct=Math.min(100,x.target?x.done/x.target*100:0);return '<div class="bear-progress"><div class="bear-progress-row"><b>'+x.label+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div></div>'}).join('')+'</div>'+
- '<div class="bear-check"><input type="checkbox" id="bearCr" '+(record.cr?'checked':'')+'><div><b>CR practice</b><span>Target: '+t.cr+' questions · manual check</span></div><strong>'+(record.cr?'✓':'—')+'</strong></div>'+
- '<div class="bear-check"><input type="checkbox" id="bearGeometry" '+(record.geometry?'checked':'')+'><div><b>Geometry study</b><span>Target: '+t.geometry+' minutes · manual check</span></div><strong>'+(record.geometry?'✓':'—')+'</strong></div>'+
- '<div class="bear-check"><input type="checkbox" id="bearLog" '+(record.log?'checked':'')+'><div><b>Log / logarithms</b><span>Target: '+t.log+' minutes · manual check</span></div><strong>'+(record.log?'✓':'—')+'</strong></div>'+
- '<div class="bear-setup"><div class="bear-setup-title">⚙ Customize your bear minimum targets</div><div class="bear-targets">'+
- [['rc','VARC — RC','RC'],['va','VARC — VA','Q'],['dilr','DILR sets','sets'],['quant','Quant questions','Q'],['cr','CR practice','Q'],['geometry','Geometry','min'],['log','Log / logarithms','min']].map(function(x){return '<div class="bear-target"><div><strong>'+x[1]+'</strong><small>Daily minimum</small></div><div><input class="bear-target-input" data-target="'+x[0]+'" type="number" min="0" max="999" value="'+(Number(t[x[0]])||0)+'"><span class="muted">'+x[2]+'</span></div></div>'}).join('')+
- '</div><div class="bear-save"><span class="save-state" id="bearSaved">Targets auto-save after Save</span><button class="primary" id="saveBearTargets">Save targets</button></div></div>'+
- '</section>'+
- '<section class="card chart-card" style="margin-top:16px"><div class="panel-head"><h2>📅 30-Day Daily Tracker</h2><span class="muted">'+wins+' successful days</span></div>'+
- '<div class="bear-history">'+h.slice().reverse().map(function(x){var pct=Math.min(100,x.targetTotal?x.total/x.targetTotal*100:0);return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(x.score?'one':'zero')+'">'+x.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+pct+'%"></div></div><span class="bear-history-val">'+Math.round(pct)+'%</span></div>'}).join('')+'</div>'+
- '<div class="bear-note">1 = all minimums completed. 0 = one or more minimums missed. The score is calculated from your Daily Session data plus the three manual items above.</div></section>';
- bindBearEvents();
+ var host=document.querySelector('#bearView');
+ if(!host)return;
+ var date=host.dataset.date||today();
+ host.dataset.date=date;
+ try{
+   var targets=getBearTargets();
+   var metrics=bearMetrics(date);
+   var history=bearHistory(30,date);
+   var wins=history.filter(function(x){return x.score===1}).length;
+   var streak=bearStreak(date);
+   var record=getBearRecord(date);
+   var met=metrics.rows.filter(function(x){return x.met}).length;
+   var mainRows=metrics.rows.slice(0,4);
+   var mainHtml=mainRows.map(function(x){
+     var pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
+     return '<div class="bear-progress-row"><b>'+escapeHtml(x.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>';
+   }).join('');
+   var historyHtml=history.slice().reverse().map(function(x){
+     var pct=Math.min(100,x.targetTotal>0?(x.total/x.targetTotal)*100:0);
+     return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(x.score?'one':'zero')+'">'+x.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+pct+'%"></div></div><span class="bear-history-val">'+Math.round(pct)+'%</span></div>';
+   }).join('');
+
+   host.innerHTML=''
+    +'<div class="section-head"><div><h2>🛡️ Bear Minimum</h2><p>Complete every minimum below to earn <b>1</b>. Miss any one and the day is <b>0</b>.</p></div><div class="bear-date-row"><input id="bearDate" type="date" value="'+date+'"></div></div>'
+    +'<div class="bear-kpis">'
+    +'<div class="card bear-kpi"><div class="big">'+metrics.score+'</div><div class="small">Daily score (1 / 0)</div></div>'
+    +'<div class="card bear-kpi"><div class="big">'+met+'/'+metrics.rows.length+'</div><div class="small">Minimums met</div></div>'
+    +'<div class="card bear-kpi"><div class="big">'+streak+'</div><div class="small">Current streak</div></div>'
+    +'<div class="card bear-kpi"><div class="big">'+wins+'/30</div><div class="small">Successful days</div></div>'
+    +'</div>'
+    +'<section class="card panel"><div class="panel-head"><h2>Today\'s Bear Minimum</h2><span class="muted">'+date+'</span></div>'
+    +'<div class="bear-score-card"><div class="bear-score '+(metrics.score?'one':'zero')+'">'+metrics.score+'</div><div><div class="bear-score-title">'+(metrics.score?'BEAR MINIMUM CLEARED 🟢':'BEAR MINIMUM NOT CLEARED 🔴')+'</div><div class="bear-score-sub">'+(metrics.score?'Every configured minimum was reached.':'Complete all minimums to turn this day into 1.')+'</div></div><strong>'+met+' / '+metrics.rows.length+'</strong></div>'
+    +'<div class="metric-list" style="margin-top:12px">'+mainHtml+'</div>'
+    +'<div class="bear-check"><input type="checkbox" id="bearCr" '+(record.cr?'checked':'')+'><div><b>CR practice</b><span>Target: '+targets.cr+' questions · manual check</span></div><strong>'+(record.cr?'✓':'—')+'</strong></div>'
+    +'<div class="bear-check"><input type="checkbox" id="bearGeometry" '+(record.geometry?'checked':'')+'><div><b>Geometry study</b><span>Target: '+targets.geometry+' minutes · manual check</span></div><strong>'+(record.geometry?'✓':'—')+'</strong></div>'
+    +'<div class="bear-check"><input type="checkbox" id="bearLog" '+(record.log?'checked':'')+'><div><b>Log / logarithms</b><span>Target: '+targets.log+' minutes · manual check</span></div><strong>'+(record.log?'✓':'—')+'</strong></div>'
+    +'<div class="bear-setup"><div class="bear-setup-title">⚙ Customize minimum targets</div><div class="bear-targets">'
+    +[['rc','VARC — RC','RC'],['va','VARC — VA','Q'],['dilr','DILR sets','sets'],['quant','Quant questions','Q'],['cr','CR practice','Q'],['geometry','Geometry','min'],['log','Log / logarithms','min']].map(function(x){
+       return '<div class="bear-target"><div><strong>'+x[1]+'</strong><small>Daily minimum</small></div><div><input class="bear-target-input" data-target="'+x[0]+'" type="number" min="0" max="999" value="'+(Number(targets[x[0]])||0)+'"><span class="muted">'+x[2]+'</span></div></div>';
+     }).join('')
+    +'</div><div class="bear-save"><span class="save-state" id="bearSaved">Targets auto-save after Save</span><button class="primary" id="saveBearTargets">Save targets</button></div></div>'
+    +'</section>'
+    +'<section class="card chart-card" style="margin-top:16px"><div class="panel-head"><h2>📅 30-Day Daily Tracker</h2><span class="muted">'+wins+' successful days</span></div><div class="bear-history">'+historyHtml+'</div><div class="bear-note">1 = every bear-minimum target met. 0 = at least one target missed. This tracker is recalculated from your saved Daily Session data.</div></section>';
+
+   bindBearEvents();
+ }catch(err){
+   console.error('Bear Minimum error:',err);
+   host.innerHTML='<section class="card panel"><div class="panel-head"><h2>🛡️ Bear Minimum</h2><span class="muted">'+date+'</span></div><div class="empty"><div style="font-size:28px">🛡️</div><b>Bear Minimum is ready</b><div style="font-size:12px;margin-top:6px">Refresh once to load your tracker.</div></div></section>';
+ }
 }
 function saveBearTargets(){var t=getBearTargets();document.querySelectorAll('.bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});state.bearTargets=t;save();renderBear();renderPerformance();toast('Bear minimum targets saved')}
 function saveBearManual(date,key,value){var r=getBearRecord(date);r[key]=!!value;state.bearRecords[date]=r;save();renderBear();renderPerformance()}
