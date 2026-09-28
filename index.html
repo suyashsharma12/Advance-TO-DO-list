@@ -45,7 +45,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
     <button data-view="completed"><span>✅ Fully Completed</span><b id="countCompleted">0</b></button>
     <button data-view="daily"><span>📚 Daily Session</span><b>→</b></button>
     <button data-view="performance"><span>📈 Performance</span><b>→</b></button>
-    <button data-view="bear"><span>🛡️ Bear Minimum</span><b>→</b></button>
+    <button data-view="bear"><span>🛡️ Bare Minimum</span><b>→</b></button>
   </div>
   <div class="side-bottom">
     <button class="mini-btn" id="themeBtn">🌙 Toggle theme</button>
@@ -102,7 +102,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <section id="bearView" class="section-view" style="display:none">
   <div class="section-head">
     <div>
-      <h2>🛡️ Bear Minimum</h2>
+      <h2>🛡️ Bare Minimum</h2>
       <p>Daily non-negotiable study floor. <b>1</b> means every minimum is completed. <b>0</b> means at least one minimum is missed.</p>
     </div>
     <div class="bear-date-row"><input id="bearDate" type="date"></div>
@@ -117,7 +117,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 
   <section class="card panel">
     <div class="panel-head">
-      <h2 id="bearStatusTitle">🔴 Bear Minimum NOT Cleared</h2>
+      <h2 id="bearStatusTitle">🔴 Bare Minimum NOT Cleared</h2>
       <span class="muted" id="bearStatusDate"></span>
     </div>
 
@@ -164,7 +164,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
   </section>
 
   <section class="card chart-card" style="margin-top:16px">
-    <div class="panel-head"><h2>📅 30-Day Bear Minimum Tracker</h2><span class="muted" id="bearHistorySummary">0 successful days</span></div>
+    <div class="panel-head"><h2>📅 30-Day Bare Minimum Tracker</h2><span class="muted" id="bearHistorySummary">0 successful days</span></div>
     <div class="bear-history" id="bearHistoryList"></div>
     <div class="bear-note">1 = every minimum completed. 0 = at least one minimum missed. The tracker is calculated from your Daily Session records and the three manual checks.</div>
   </section>
@@ -406,15 +406,15 @@ function renderBear(){
    }).join('');
 
    host.innerHTML=''
-    +'<div class="section-head"><div><h2>🛡️ Bear Minimum</h2><p>Complete every minimum below to earn <b>1</b>. Miss any one and the day is <b>0</b>.</p></div><div class="bear-date-row"><input id="bearDate" type="date" value="'+date+'"></div></div>'
+    +'<div class="section-head"><div><h2>🛡️ Bare Minimum</h2><p>Complete every minimum below to earn <b>1</b>. Miss any one and the day is <b>0</b>.</p></div><div class="bear-date-row"><input id="bearDate" type="date" value="'+date+'"></div></div>'
     +'<div class="bear-kpis">'
     +'<div class="card bear-kpi"><div class="big">'+metrics.score+'</div><div class="small">Daily score (1 / 0)</div></div>'
     +'<div class="card bear-kpi"><div class="big">'+met+'/'+metrics.rows.length+'</div><div class="small">Minimums met</div></div>'
     +'<div class="card bear-kpi"><div class="big">'+streak+'</div><div class="small">Current streak</div></div>'
     +'<div class="card bear-kpi"><div class="big">'+wins+'/30</div><div class="small">Successful days</div></div>'
     +'</div>'
-    +'<section class="card panel"><div class="panel-head"><h2>Today\'s Bear Minimum</h2><span class="muted">'+date+'</span></div>'
-    +'<div class="bear-score-card"><div class="bear-score '+(metrics.score?'one':'zero')+'">'+metrics.score+'</div><div><div class="bear-score-title">'+(metrics.score?'BEAR MINIMUM CLEARED 🟢':'BEAR MINIMUM NOT CLEARED 🔴')+'</div><div class="bear-score-sub">'+(metrics.score?'Every configured minimum was reached.':'Complete all minimums to turn this day into 1.')+'</div></div><strong>'+met+' / '+metrics.rows.length+'</strong></div>'
+    +'<section class="card panel"><div class="panel-head"><h2>Today\'s Bare Minimum</h2><span class="muted">'+date+'</span></div>'
+    +'<div class="bear-score-card"><div class="bear-score '+(metrics.score?'one':'zero')+'">'+metrics.score+'</div><div><div class="bear-score-title">'+(metrics.score?'BARE MINIMUM CLEARED 🟢':'BARE MINIMUM NOT CLEARED 🔴')+'</div><div class="bear-score-sub">'+(metrics.score?'Every configured minimum was reached.':'Complete all minimums to turn this day into 1.')+'</div></div><strong>'+met+' / '+metrics.rows.length+'</strong></div>'
     +'<div class="metric-list" style="margin-top:12px">'+mainHtml+'</div>'
     +'<div class="bear-check"><input type="checkbox" id="bearCr" '+(record.cr?'checked':'')+'><div><b>CR practice</b><span>Target: '+targets.cr+' questions · manual check</span></div><strong>'+(record.cr?'✓':'—')+'</strong></div>'
     +'<div class="bear-check"><input type="checkbox" id="bearGeometry" '+(record.geometry?'checked':'')+'><div><b>Geometry study</b><span>Target: '+targets.geometry+' minutes · manual check</span></div><strong>'+(record.geometry?'✓':'—')+'</strong></div>'
@@ -429,8 +429,8 @@ function renderBear(){
 
    bindBearEvents();
  }catch(err){
-   console.error('Bear Minimum error:',err);
-   host.innerHTML='<section class="card panel"><div class="panel-head"><h2>🛡️ Bear Minimum</h2><span class="muted">'+date+'</span></div><div class="empty"><div style="font-size:28px">🛡️</div><b>Bear Minimum is ready</b><div style="font-size:12px;margin-top:6px">Refresh once to load your tracker.</div></div></section>';
+   console.error('Bare Minimum error:',err);
+   host.innerHTML='<section class="card panel"><div class="panel-head"><h2>🛡️ Bare Minimum</h2><span class="muted">'+date+'</span></div><div class="empty"><div style="font-size:28px">🛡️</div><b>Bare Minimum is ready</b><div style="font-size:12px;margin-top:6px">Refresh once to load your tracker.</div></div></section>';
  }
 }
 function saveBearTargets(){var t=getBearTargets();document.querySelectorAll('.bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});state.bearTargets=t;save();renderBear();renderPerformance();toast('Bear minimum targets saved')}
@@ -452,7 +452,7 @@ function bearPerformanceBlock(range){
    var width=x.score?100:4;
    return "<div class=\"day-row\"><span class=\"day-label\">"+label+"</span><div class=\"day-stack\"><div class=\"seg-quant\" style=\"width:"+width+"%\"></div></div><b class=\"day-total\">"+x.score+"</b></div>";
  }).join("");
- return "<section class=\"card chart-card\" style=\"margin-top:16px\"><div class=\"panel-head\"><h2>🛡️ Bear Minimum Performance</h2><span class=\"muted\">"+wins+"/"+range+" days = "+Math.round(wins/range*100)+"%</span></div><div class=\"day-chart\">"+bars+"</div><div class=\"day-note\">1 = every bear-minimum target met · 0 = at least one target missed · Best streak in this range: "+best+" day"+(best===1?"":"s")+".</div></section>";
+ return "<section class=\"card chart-card\" style=\"margin-top:16px\"><div class=\"panel-head\"><h2>🛡️ Bare Minimum Performance</h2><span class=\"muted\">"+wins+"/"+range+" days = "+Math.round(wins/range*100)+"%</span></div><div class=\"day-chart\">"+bars+"</div><div class=\"day-note\">1 = every bear-minimum target met · 0 = at least one target missed · Best streak in this range: "+best+" day"+(best===1?"":"s")+".</div></section>";
 }
 
 function initStudyAnalytics(){
@@ -625,7 +625,7 @@ function refreshBearPage(){
     $('#bearMet').textContent=met+'/7';
     $('#bearMetBig').textContent=met+' / 7';
     $('#bearStatusDate').textContent=date;
-    $('#bearStatusTitle').textContent=score?'🟢 Bear Minimum CLEARED':'🔴 Bear Minimum NOT Cleared';
+    $('#bearStatusTitle').textContent=score?'🟢 Bare Minimum CLEARED':'🔴 Bare Minimum NOT Cleared';
     $('#bearStatusText').textContent=score?'Every minimum was completed for this day.':'Complete every minimum to turn this day into 1.';
 
     $('#bearMainProgress').innerHTML=items.map(function(x){
@@ -651,7 +651,7 @@ function refreshBearPage(){
     console.error('Bear refresh failed',err);
     var host2=$('#bearView');
     if(host2 && !host2.innerHTML.trim()){
-      host2.innerHTML='<section class="card panel"><h2>🛡️ Bear Minimum</h2><p>Today score: <b>0</b></p><p>Complete all minimums to change the score to <b>1</b>.</p></section>';
+      host2.innerHTML='<section class="card panel"><h2>🛡️ Bare Minimum</h2><p>Today score: <b>0</b></p><p>Complete all minimums to change the score to <b>1</b>.</p></section>';
     }
   }
 }
