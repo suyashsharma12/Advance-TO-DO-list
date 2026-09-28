@@ -488,7 +488,7 @@ function activateSection(view){
  currentView=view;
  document.querySelectorAll('.nav button').forEach(function(x){x.classList.toggle('active',x.dataset.view===view)});
  var dashboard=$('#dashboardView'),daily=$('#dailyView'),perf=$('#performanceView');
- if(dashboard)dashboard.style.display=(view==='daily'||view==='performance')?'none':'block';
+ if(dashboard)dashboard.style.display=(view==='daily'||view==='performance'||view==='bear')?'none':'block';
  if(daily)daily.style.display=view==='daily'?'block':'none';
  if(perf)perf.style.display=view==='performance'?'block':'none';
  try{
@@ -496,7 +496,7 @@ function activateSection(view){
    else if(view==='performance'){if($('#performanceView').dataset.range===undefined)$('#performanceView').dataset.range='14';renderPerformance();window.scrollTo({top:0,behavior:'smooth'});}
    else if(view==='bear'){if($('#bearView').dataset.date===undefined)$('#bearView').dataset.date=today();renderBear();window.scrollTo({top:0,behavior:'smooth'});}
    else {renderTasks();window.scrollTo({top:0,behavior:'smooth'});}
- }catch(err){console.error(err);toast('Daily Session could not open. Please refresh once.');}
+ }catch(err){console.error(err);toast(view==='daily'?'Daily Session could not open.':view==='performance'?'Performance could not open.':view==='bear'?'Bear Minimum could not open.':'Could not open this section.');}
 }
 function showMainSection(view){activateSection(view)}
 document.querySelectorAll('.nav button').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();activateSection(b.dataset.view)})});
