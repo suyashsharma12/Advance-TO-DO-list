@@ -419,9 +419,9 @@ function renderBear(){
     +'<div class="metric-list" style="margin-top:12px">'+mainHtml+'</div>'
     +'<div class="bear-check"><input type="checkbox" id="bearCr" '+(record.cr?'checked':'')+'><div><b>CR practice</b><span>Target: '+targets.cr+' questions · manual check</span></div><strong>'+(record.cr?'✓':'—')+'</strong></div>'
     +'<div class="bear-check"><input type="checkbox" id="bearGeometry" '+(record.geometry?'checked':'')+'><div><b>Geometry study</b><span>Target: '+targets.geometry+' minutes · manual check</span></div><strong>'+(record.geometry?'✓':'—')+'</strong></div>'
-    +'<div class="bear-check"><input type="checkbox" id="bearLog" '+(record.log?'checked':'')+'><div><b>Log / logarithms</b><span>Target: '+targets.log+' minutes · manual check</span></div><strong>'+(record.log?'✓':'—')+'</strong></div>'
+    +'<div class="bear-check"><input type="checkbox" id="bearAeon" '+(record.aeon?'checked':'')+'><div><b>AEON Article</b><span>Target: '+targets.aeon+' article · manual check</span></div><strong>'+(record.aeon?'✓':'—')+'</strong></div>'
     +'<div class="bear-setup"><div class="bear-setup-title">⚙ Customize minimum targets</div><div class="bear-targets">'
-    +[['rc','VARC — RC','RC'],['va','VARC — VA','Q'],['dilr','DILR sets','sets'],['quant','Quant questions','Q'],['cr','CR practice','Q'],['geometry','Geometry','min'],['log','Log / logarithms','min']].map(function(x){
+    +[['rc','VARC — RC','RC'],['va','VARC — VA','Q'],['dilr','DILR sets','sets'],['quant','Quant questions','Q'],['cr','CR practice','Q'],['geometry','Geometry','min'],['aeon','AEON Article','article']].map(function(x){
        return '<div class="bear-target"><div><strong>'+x[1]+'</strong><small>Daily minimum</small></div><div><input class="bear-target-input" data-target="'+x[0]+'" type="number" min="0" max="999" value="'+(Number(targets[x[0]])||0)+'"><span class="muted">'+x[2]+'</span></div></div>';
      }).join('')
     +'</div><div class="bear-save"><span class="save-state" id="bearSaved">Targets auto-save after Save</span><button class="primary" id="saveBearTargets">Save targets</button></div></div>'
