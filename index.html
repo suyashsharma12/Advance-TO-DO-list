@@ -144,9 +144,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
       <strong id="bearGeometryState">0</strong>
     </div>
     <div class="bear-check">
-      <input type="checkbox" id="bearLog" data-bear-manual="log">
-      <div><b>Log / logarithms</b><span>Default minimum: 35 minutes</span></div>
-      <strong id="bearLogState">0</strong>
+      <input type="checkbox" id="bearAeon" data-bear-manual="aeon">
+      <div><b>AEON Article</b><span>Default minimum: 1 article</span></div>
+      <strong id="bearAeonState">0</strong>
     </div>
 
     <div class="bear-setup">
@@ -158,7 +158,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
         <div class="bear-target"><div><strong>Quant</strong><small>Questions completed</small></div><div><input class="bear-target-input" data-target="quant" type="number" min="0" value="30"><span class="muted">Q</span></div></div>
         <div class="bear-target"><div><strong>CR</strong><small>Practice questions</small></div><div><input class="bear-target-input" data-target="cr" type="number" min="0" value="10"><span class="muted">Q</span></div></div>
         <div class="bear-target"><div><strong>Geometry</strong><small>Study duration</small></div><div><input class="bear-target-input" data-target="geometry" type="number" min="0" value="30"><span class="muted">min</span></div></div>
-        <div class="bear-target"><div><strong>Log / logarithms</strong><small>Study duration</small></div><div><input class="bear-target-input" data-target="log" type="number" min="0" value="35"><span class="muted">min</span></div></div>
+        <div class="bear-target"><div><strong>AEON Article</strong><small>Article completed</small></div><div><input class="bear-target-input" data-target="aeon" type="number" min="0" value="1"><span class="muted">article</span></div></div>
       </div>
       <div class="bear-save"><span class="save-state" id="bearSaved">Targets and checks save automatically</span><button class="primary" id="saveBearTargets">Save targets</button></div>
     </div>
@@ -364,9 +364,9 @@ function bindDailyEvents(){
  host.oninput=function(e){if(e.target.matches('.vacount,.qcount,#studyHours,#sessionNotes')){saveAndUpdateDaily()}};
 }
 
-var BEAR_DEFAULT_TARGETS={rc:4,va:8,dilr:2,quant:30,cr:10,geometry:30,log:35};
+var BEAR_DEFAULT_TARGETS={rc:4,va:8,dilr:2,quant:30,cr:10,geometry:30,aeon:1};
 function getBearTargets(){state.bearTargets=Object.assign({},BEAR_DEFAULT_TARGETS,state.bearTargets||{});return state.bearTargets}
-function getBearRecord(date){state.bearRecords=state.bearRecords||{};if(!state.bearRecords[date])state.bearRecords[date]={cr:false,geometry:false,log:false};return state.bearRecords[date]}
+function getBearRecord(date){state.bearRecords=state.bearRecords||{};if(!state.bearRecords[date])state.bearRecords[date]={cr:false,geometry:false,aeon:false};if(state.bearRecords[date].aeon===undefined&&state.bearRecords[date].log!==undefined)state.bearRecords[date].aeon=!!state.bearRecords[date].log;return state.bearRecords[date]}
 function bearMetrics(date){
  var t=getBearTargets(),s=getSession(date),r=getBearRecord(date);
  var rows=[
@@ -376,7 +376,7 @@ function bearMetrics(date){
   {key:'quant',label:'Quant questions',done:quantDone(s),target:Number(t.quant)||0,unit:'Q'},
   {key:'cr',label:'CR practice',done:r.cr?Number(t.cr):0,target:Number(t.cr)||0,unit:'Q'},
   {key:'geometry',label:'Geometry study',done:r.geometry?Number(t.geometry):0,target:Number(t.geometry)||0,unit:'min'},
-  {key:'log',label:'Log / logarithms',done:r.log?Number(t.log):0,target:Number(t.log)||0,unit:'min'}
+  {key:'aeon',label:'AEON Article',done:r.aeon?Number(t.aeon):0,target:Number(t.aeon)||0,unit:'article'}
  ];
  rows.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
  return {rows:rows,score:rows.every(function(x){return x.met})?1:0};
@@ -440,7 +440,7 @@ function activeBearDate(){var v=$('#bearDate');return v?v.value:($('#bearView').
 function bindBearEvents(){
  var host=$('#bearView');if(!host)return;var dateInput=$('#bearDate');if(dateInput)dateInput.onchange=function(){host.dataset.date=dateInput.value;renderBear()};
  var saveBtn=$('#saveBearTargets');if(saveBtn)saveBtn.onclick=saveBearTargets;
- var cr=$('#bearCr'),geo=$('#bearGeometry'),log=$('#bearLog');
+ var cr=$('#bearCr'),geo=$('#bearGeometry'),aeon=$('#bearAeon');
  if(cr)cr.onchange=function(){saveBearManual(activeBearDate(),'cr',cr.checked)};
  if(geo)geo.onchange=function(){saveBearManual(activeBearDate(),'geometry',geo.checked)};
  if(log)log.onchange=function(){saveBearManual(activeBearDate(),'log',log.checked)};
@@ -619,10 +619,10 @@ function refreshBearPage(){
     var record=getBearRecord(date);
 
     // Keep the three manual checks synced to the selected date.
-    var cr=$('#bearCr'),geo=$('#bearGeometry'),log=$('#bearLog');
+    var cr=$('#bearCr'),geo=$('#bearGeometry'),aeon=$('#bearAeon');
     if(cr)cr.checked=!!record.cr;
     if(geo)geo.checked=!!record.geometry;
-    if(log)log.checked=!!record.log;
+    if(aeon)aeon.checked=!!record.aeon;
 
     // The first four items are calculated directly from Daily Session.
     var items=[
@@ -632,7 +632,7 @@ function refreshBearPage(){
       {label:'Quant questions',done:quantDone(s),target:Number(targets.quant)||0,unit:'Q'},
       {label:'CR practice',done:record.cr?Number(targets.cr):0,target:Number(targets.cr)||0,unit:'Q',manual:true},
       {label:'Geometry study',done:record.geometry?Number(targets.geometry):0,target:Number(targets.geometry)||0,unit:'min',manual:true},
-      {label:'Log / logarithms',done:record.log?Number(targets.log):0,target:Number(targets.log)||0,unit:'min',manual:true}
+      {label:'AEON Article',done:record.aeon?Number(targets.aeon):0,target:Number(targets.aeon)||0,unit:'article',manual:true}
     ];
     items.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
     var score=items.every(function(x){return x.met})?1:0;
@@ -658,7 +658,7 @@ function refreshBearPage(){
 
     $('#bearCrState').textContent=record.cr?'1':'0';
     $('#bearGeometryState').textContent=record.geometry?'1':'0';
-    $('#bearLogState').textContent=record.log?'1':'0';
+    $('#bearAeonState').textContent=record.aeon?'1':'0';
 
     var history=bearHistory(30,date);
     var wins=history.filter(function(x){return x.score===1}).length;
@@ -687,7 +687,7 @@ function bindBearStaticEvents(){
     document.querySelectorAll('#bearView .bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});
     state.bearTargets=t;save();refreshBearPage();renderPerformance();toast('Bear minimum targets saved');
   });
-  [['bearCr','cr'],['bearGeometry','geometry'],['bearLog','log']].forEach(function(pair){
+  [['bearCr','cr'],['bearGeometry','geometry'],['bearAeon','aeon']].forEach(function(pair){
     var el=$('#'+pair[0]);if(el)el.addEventListener('change',function(){
       var r=getBearRecord(activeBearDate());
       r[pair[1]]=el.checked;
