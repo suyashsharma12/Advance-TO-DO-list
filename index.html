@@ -383,7 +383,7 @@ function getBearTargets(){
  return merged;
 }
 function getBearTargets(){state.bearTargets=Object.assign({},BEAR_DEFAULT_TARGETS,state.bearTargets||{});return state.bearTargets}
-function getBearRecord(date){state.bearRecords=state.bearRecords||{};if(!state.bearRecords[date])state.bearRecords[date]={cr:false,geometry:false,aeon:false};if(state.bearRecords[date].aeon===undefined&&state.bearRecords[date].log!==undefined)state.bearRecords[date].aeon=!!state.bearRecords[date].log;return state.bearRecords[date]}
+function getBearRecord(date){state.bearRecords=state.bearRecords||{};if(!state.bearRecords[date])state.bearRecords[date]={cr:false,aeon:false};if(state.bearRecords[date].aeon===undefined&&state.bearRecords[date].log!==undefined)state.bearRecords[date].aeon=!!state.bearRecords[date].log;return state.bearRecords[date]}
 function bearMetrics(date){
  var t=getBearTargets(),s=getSession(date),r=getBearRecord(date);
  var vaItems=[
@@ -408,68 +408,11 @@ function bearMetrics(date){
 }
 function bearStreak(endDate){var d=new Date(endDate+'T12:00:00'),n=0;while(true){var ds=d.toISOString().slice(0,10);if(bearMetrics(ds).score!==1)break;n++;d.setDate(d.getDate()-1)}return n}
 function bearHistory(days,endDate){var out=[],d=new Date(endDate+'T12:00:00');for(var i=days-1;i>=0;i--){var x=new Date(d);x.setDate(d.getDate()-i);var ds=x.toISOString().slice(0,10),m=bearMetrics(ds),rows=m.rows.filter(function(r){return r.key!=='va'});out.push({date:ds,score:m.score,rows:rows,total:rows.reduce(function(a,r){return a+r.done},0),targetTotal:rows.reduce(function(a,r){return a+r.target},0)})}return out}
-function renderBear(){
- var host=document.querySelector('#bearView');
- if(!host)return;
- var date=host.dataset.date||today();
- host.dataset.date=date;
- try{
-   var targets=getBearTargets();
-   var metrics=bearMetrics(date);
-   var history=bearHistory(30,date);
-   var wins=history.filter(function(x){return x.score===1}).length;
-   var streak=bearStreak(date);
-   var record=getBearRecord(date);
-   var met=metrics.rows.filter(function(x){return x.met}).length;
-   var mainRows=metrics.rows.slice(0,4);
-   var mainHtml=mainRows.map(function(x){
-     var pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
-     return '<div class="bear-progress-row"><b>'+escapeHtml(x.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>';
-   }).join('');
-   var historyHtml=history.slice().reverse().map(function(x){
-     var pct=Math.min(100,x.targetTotal>0?(x.total/x.targetTotal)*100:0);
-     return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(x.score?'one':'zero')+'">'+x.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+pct+'%"></div></div><span class="bear-history-val">'+Math.round(pct)+'%</span></div>';
-   }).join('');
-
-   host.innerHTML=''
-    +'<div class="section-head"><div><h2>🛡️ Bare Minimum</h2><p>Complete every minimum below to earn <b>1</b>. Miss any one and the day is <b>0</b>.</p></div><div class="bear-date-row"><input id="bearDate" type="date" value="'+date+'"></div></div>'
-    +'<div class="bear-kpis">'
-    +'<div class="card bear-kpi"><div class="big">'+metrics.score+'</div><div class="small">Daily score (1 / 0)</div></div>'
-    +'<div class="card bear-kpi"><div class="big">'+met+'/'+metrics.rows.length+'</div><div class="small">Minimums met</div></div>'
-    +'<div class="card bear-kpi"><div class="big">'+streak+'</div><div class="small">Current streak</div></div>'
-    +'<div class="card bear-kpi"><div class="big">'+wins+'/30</div><div class="small">Successful days</div></div>'
-    +'</div>'
-    +'<section class="card panel"><div class="panel-head"><h2>Today\'s Bare Minimum</h2><span class="muted">'+date+'</span></div>'
-    +'<div class="bear-score-card"><div class="bear-score '+(metrics.score?'one':'zero')+'">'+metrics.score+'</div><div><div class="bear-score-title">'+(metrics.score?'BARE MINIMUM CLEARED 🟢':'BARE MINIMUM NOT CLEARED 🔴')+'</div><div class="bear-score-sub">'+(metrics.score?'Every configured minimum was reached.':'Complete all minimums to turn this day into 1.')+'</div></div><strong>'+met+' / '+metrics.rows.length+'</strong></div>'
-    +'<div class="metric-list" style="margin-top:12px">'+mainHtml+'</div>'
-    +'<div class="bear-check"><input type="checkbox" id="bearCr" '+(record.cr?'checked':'')+'><div><b>CR practice</b><span>Target: '+targets.cr+' questions · manual check</span></div><strong>'+(record.cr?'✓':'—')+'</strong></div>'
-    +'<div class="bear-check"><input type="checkbox" id="bearGeometry" '+(record.geometry?'checked':'')+'><div><b>Geometry study</b><span>Target: '+targets.geometry+' minutes · manual check</span></div><strong>'+(record.geometry?'✓':'—')+'</strong></div>'
-    +'<div class="bear-check"><input type="checkbox" id="bearAeon" '+(record.aeon?'checked':'')+'><div><b>AEON Article</b><span>Target: '+targets.aeon+' article · manual check</span></div><strong>'+(record.aeon?'✓':'—')+'</strong></div>'
-    +'<div class="bear-setup"><div class="bear-setup-title">⚙ Customize minimum targets</div><div class="bear-targets">'
-    +[['rc','VARC — RC','RC'],['va','VARC — VA','Q'],['dilr','DILR sets','sets'],['quant','Quant questions','Q'],['cr','CR practice','Q'],['geometry','Geometry','min'],['aeon','AEON Article','article']].map(function(x){
-       return '<div class="bear-target"><div><strong>'+x[1]+'</strong><small>Daily minimum</small></div><div><input class="bear-target-input" data-target="'+x[0]+'" type="number" min="0" max="999" value="'+(Number(targets[x[0]])||0)+'"><span class="muted">'+x[2]+'</span></div></div>';
-     }).join('')
-    +'</div><div class="bear-save"><span class="save-state" id="bearSaved">Targets auto-save after Save</span><button class="primary" id="saveBearTargets">Save targets</button></div></div>'
-    +'</section>'
-    +'<section class="card chart-card" style="margin-top:16px"><div class="panel-head"><h2>📅 30-Day Daily Tracker</h2><span class="muted">'+wins+' successful days</span></div><div class="bear-history">'+historyHtml+'</div><div class="bear-note">1 = every bear-minimum target met. 0 = at least one target missed. This tracker is recalculated from your saved Daily Session data.</div></section>';
-
-   bindBearEvents();
- }catch(err){
-   console.error('Bare Minimum error:',err);
-   host.innerHTML='<section class="card panel"><div class="panel-head"><h2>🛡️ Bare Minimum</h2><span class="muted">'+date+'</span></div><div class="empty"><div style="font-size:28px">🛡️</div><b>Bare Minimum is ready</b><div style="font-size:12px;margin-top:6px">Refresh once to load your tracker.</div></div></section>';
- }
-}
+function renderBear(){refreshBearPage()}
 function saveBearTargets(){var t=getBearTargets();document.querySelectorAll('.bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});state.bearTargets=t;save();renderBear();renderPerformance();toast('Bear minimum targets saved')}
 function saveBearManual(date,key,value){var r=getBearRecord(date);r[key]=!!value;state.bearRecords[date]=r;save();renderBear();renderPerformance()}
 function activeBearDate(){var v=$('#bearDate');return v?v.value:($('#bearView').dataset.date||today())}
-function bindBearEvents(){
- var host=$('#bearView');if(!host)return;var dateInput=$('#bearDate');if(dateInput)dateInput.onchange=function(){host.dataset.date=dateInput.value;renderBear()};
- var saveBtn=$('#saveBearTargets');if(saveBtn)saveBtn.onclick=saveBearTargets;
- var cr=$('#bearCr'),geo=$('#bearGeometry'),aeon=$('#bearAeon');
- if(cr)cr.onchange=function(){saveBearManual(activeBearDate(),'cr',cr.checked)};
- if(geo)geo.onchange=function(){saveBearManual(activeBearDate(),'geometry',geo.checked)};
- if(log)log.onchange=function(){saveBearManual(activeBearDate(),'log',log.checked)};
-}
+function bindBearEvents(){bindBearStaticEvents()}
 function bearPerformanceBlock(range){
  var days=bearHistory(range,today()),wins=days.filter(function(x){return x.score===1}).length,best=0,cur=0;
  days.forEach(function(x){if(x.score===1){cur++;if(cur>best)best=cur}else cur=0});
@@ -634,74 +577,47 @@ function bareMotivationForDate(date){
 function refreshBearPage(){
   var host=$('#bearView');if(!host)return;
   try{
-    var dateEl=$('#bearDate');
-    var date=dateEl&&dateEl.value?dateEl.value:(host.dataset.date||today());
-    host.dataset.date=date;
-    if(dateEl)dateEl.value=date;
-
-    var targets=getBearTargets();
-    var s=getSession(date);
-    var record=getBearRecord(date);
-
-    // Keep the three manual checks synced to the selected date.
-    var cr=$('#bearCr'),geo=$('#bearGeometry'),aeon=$('#bearAeon');
-    if(cr)cr.checked=!!record.cr;
-    if(geo)geo.checked=!!record.geometry;
-    if(aeon)aeon.checked=!!record.aeon;
-
-    // The first four items are calculated directly from Daily Session.
-    var items=[
-      {label:'VARC — RC',done:rcDone(s),target:Number(targets.rc)||0,unit:'RC'},
-      {label:'VARC — VA',done:vaDone(s),target:Number(targets.va)||0,unit:'Q'},
-      {label:'DILR sets',done:dilrDone(s),target:Number(targets.dilr)||0,unit:'sets'},
-      {label:'Quant questions',done:quantDone(s),target:Number(targets.quant)||0,unit:'Q'},
-      {label:'CR practice',done:record.cr?Number(targets.cr):0,target:Number(targets.cr)||0,unit:'Q',manual:true},
-      {label:'Geometry study',done:record.geometry?Number(targets.geometry):0,target:Number(targets.geometry)||0,unit:'min',manual:true},
-      {label:'AEON Article',done:record.aeon?Number(targets.aeon):0,target:Number(targets.aeon)||0,unit:'article',manual:true}
-    ];
-    items.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
-    var score=items.every(function(x){return x.met})?1:0;
-    var met=items.filter(function(x){return x.met}).length;
-
+    var dateEl=$('#bearDate'),date=dateEl&&dateEl.value?dateEl.value:(host.dataset.date||today());
+    host.dataset.date=date;if(dateEl)dateEl.value=date;
+    var targets=getBearTargets(),s=getSession(date),record=getBearRecord(date),metrics=bearMetrics(date),vaItems=metrics.vaItems;
+    var required=metrics.rows.filter(function(x){return x.key!=='va'}),score=metrics.score,met=required.filter(function(x){return x.met}).length;
     $('#bearScore').textContent=score;
     $('#bearScoreCircle').textContent=score;
     $('#bearScoreCircle').className='bear-score '+(score?'one':'zero');
-    $('#bearMet').textContent=met+'/7';
-    $('#bearMetBig').textContent=met+' / 7';
+    $('#bearMet').textContent=met+'/9';
+    $('#bearMetBig').textContent=met+' / 9';
     $('#bearStatusDate').textContent=date;
     $('#bearStatusTitle').textContent=score?'🟢 Bare Minimum CLEARED':'🔴 Bare Minimum NOT Cleared';
     $('#bearStatusText').textContent=score?'Every minimum was completed for this day.':'Complete every minimum to turn this day into 1.';
     var slot=$('#bareMotivationSlot');
-    if(slot){
-      slot.innerHTML=score?'<div id="bareMotivation" class="bare-motivation"><div class="bare-motivation-title">🔥 YOU GOT 1 TODAY</div><div class="bare-motivation-quote">“'+escapeHtml(bareMotivationForDate(date))+'”</div><div class="bare-motivation-next">Tomorrow: open your Daily Session, hit the minimum again, and keep your CAT preparation moving.</div></div>':'';
-    }
+    if(slot)slot.innerHTML=score?'<div id="bareMotivation" class="bare-motivation"><div class="bare-motivation-title">🔥 YOU GOT 1 TODAY</div><div class="bare-motivation-quote">“'+escapeHtml(bareMotivationForDate(date))+'”</div><div class="bare-motivation-next">Tomorrow: open your Daily Session, hit the minimum again, and keep your CAT preparation moving.</div></div>':'';
 
-    $('#bearMainProgress').innerHTML=items.map(function(x){
-      var pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
-      return '<div class="bear-progress-row"><b>'+escapeHtml(x.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>';
-    }).join('');
+    var progress=[],x,pct;
+    x=metrics.rows.find(function(r){return r.key==='rc'});pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
+    progress.push('<div class="bear-progress-row"><b>VARC — RC</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>');
+    var vaTotal=vaItems.reduce(function(a,r){return a+r.done},0),vaTarget=vaItems.reduce(function(a,r){return a+r.target},0);
+    pct=Math.min(100,vaTarget>0?(vaTotal/vaTarget)*100:0);
+    progress.push('<div class="bear-progress-row"><b>VARC — VA</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+vaTotal+'/'+vaTarget+' Q</span></div>');
+    progress.push('<details class="bear-va-progress-dropdown"><summary class="bear-va-progress-summary"><b>VA breakdown</b><span>▾</span></summary>'+vaItems.map(function(r){var p=Math.min(100,r.target>0?(r.done/r.target)*100:0);return '<div class="bear-progress-row bear-va-progress-child"><b>'+escapeHtml(r.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+p+'%"></div></div><span>'+r.done+'/'+r.target+' Q</span></div>';}).join('')+'</details>');
+    ['dilr','quant','cr','aeon'].forEach(function(key){
+      x=metrics.rows.find(function(r){return r.key===key});
+      pct=Math.min(100,x.target>0?(x.done/x.target)*100:0);
+      progress.push('<div class="bear-progress-row"><b>'+escapeHtml(x.label)+'</b><div class="bear-track"><div class="bear-fill" style="width:'+pct+'%"></div></div><span>'+x.done+'/'+x.target+' '+x.unit+'</span></div>');
+    });
+    $('#bearMainProgress').innerHTML=progress.join('');
 
     $('#bearCrState').textContent=record.cr?'1':'0';
-    $('#bearGeometryState').textContent=record.geometry?'1':'0';
     $('#bearAeonState').textContent=record.aeon?'1':'0';
-
-    var history=bearHistory(30,date);
-    var wins=history.filter(function(x){return x.score===1}).length;
+    var history=bearHistory(30,date),wins=history.filter(function(r){return r.score===1}).length;
     $('#bearWins').textContent=wins+'/30';
     $('#bearStreak').textContent=bearStreak(date);
     $('#bearHistorySummary').textContent=wins+' successful days';
-
-    $('#bearHistoryList').innerHTML=history.slice().reverse().map(function(x){
-      var pct=Math.min(100,x.targetTotal>0?(x.total/x.targetTotal)*100:0);
-      return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(x.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(x.score?'one':'zero')+'">'+x.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+pct+'%"></div></div><span class="bear-history-val">'+Math.round(pct)+'%</span></div>';
+    $('#bearHistoryList').innerHTML=history.slice().reverse().map(function(r){
+      var p=Math.min(100,r.targetTotal>0?(r.total/r.targetTotal)*100:0);
+      return '<div class="bear-history-row"><span class="bear-history-date">'+new Date(r.date+'T12:00:00').toLocaleDateString(undefined,{day:'2-digit',month:'short'})+'</span><span class="bear-badge '+(r.score?'one':'zero')+'">'+r.score+'</span><div class="bear-mini-track"><div class="bear-mini-fill" style="width:'+p+'%"></div></div><span class="bear-history-val">'+Math.round(p)+'%</span></div>';
     }).join('');
-  }catch(err){
-    console.error('Bear refresh failed',err);
-    var host2=$('#bearView');
-    if(host2 && !host2.innerHTML.trim()){
-      host2.innerHTML='<section class="card panel"><h2>🛡️ Bare Minimum</h2><p>Today score: <b>0</b></p><p>Complete all minimums to change the score to <b>1</b>.</p></section>';
-    }
-  }
+    document.querySelectorAll('#bearView .bear-target-input').forEach(function(e){e.value=Number(targets[e.dataset.target])||0});
+  }catch(err){console.error('Bare Minimum refresh failed',err);}
 }
 function bindBearStaticEvents(){
   var host=$('#bearView');if(!host||host.dataset.bound==='1')return;
@@ -712,7 +628,7 @@ function bindBearStaticEvents(){
     document.querySelectorAll('#bearView .bear-target-input').forEach(function(e){t[e.dataset.target]=Math.max(0,Number(e.value)||0)});
     state.bearTargets=t;save();refreshBearPage();renderPerformance();toast('Bear minimum targets saved');
   });
-  [['bearCr','cr'],['bearGeometry','geometry'],['bearAeon','aeon']].forEach(function(pair){
+  [['bearCr','cr'],['bearAeon','aeon']].forEach(function(pair){
     var el=$('#'+pair[0]);if(el)el.addEventListener('change',function(){
       var r=getBearRecord(activeBearDate());
       r[pair[1]]=el.checked;
