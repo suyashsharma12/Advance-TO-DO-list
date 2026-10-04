@@ -364,25 +364,47 @@ function bindDailyEvents(){
  host.oninput=function(e){if(e.target.matches('.vacount,.qcount,#studyHours,#sessionNotes')){saveAndUpdateDaily()}};
 }
 
-var BEAR_DEFAULT_TARGETS={rc:4,va:8,dilr:2,quant:30,cr:10,geometry:30,aeon:1};
+var BEAR_DEFAULT_TARGETS={rc:4,vaParajumble:2,vaOddOneOut:2,vaFillBlank:2,vaParaSummary:2,dilr:2,quant:30,cr:10,aeon:1};
+function getBearTargets(){
+ state.bearTargets=state.bearTargets||{};
+ var raw=state.bearTargets,legacyVa=Number(raw.va)||0;
+ if(legacyVa>0){
+  if(raw.vaParajumble===undefined)raw.vaParajumble=Math.round(legacyVa/4);
+  if(raw.vaOddOneOut===undefined)raw.vaOddOneOut=Math.round(legacyVa/4);
+  if(raw.vaFillBlank===undefined)raw.vaFillBlank=Math.round(legacyVa/4);
+  if(raw.vaParaSummary===undefined)raw.vaParaSummary=legacyVa-Number(raw.vaParajumble)-Number(raw.vaOddOneOut)-Number(raw.vaFillBlank);
+ }
+ var merged=Object.assign({},BEAR_DEFAULT_TARGETS,raw);
+ delete merged.va;delete merged.geometry;delete merged.log;
+ state.bearTargets=merged;
+ return merged;
+}
 function getBearTargets(){state.bearTargets=Object.assign({},BEAR_DEFAULT_TARGETS,state.bearTargets||{});return state.bearTargets}
 function getBearRecord(date){state.bearRecords=state.bearRecords||{};if(!state.bearRecords[date])state.bearRecords[date]={cr:false,geometry:false,aeon:false};if(state.bearRecords[date].aeon===undefined&&state.bearRecords[date].log!==undefined)state.bearRecords[date].aeon=!!state.bearRecords[date].log;return state.bearRecords[date]}
 function bearMetrics(date){
  var t=getBearTargets(),s=getSession(date),r=getBearRecord(date);
+ var vaItems=[
+  {key:'vaParajumble',label:'Para Jumble',done:Number(s.varc.va.paraJumble)||0,target:Number(t.vaParajumble)||0,unit:'Q'},
+  {key:'vaOddOneOut',label:'Odd One Out',done:Number(s.varc.va.oddOneOut)||0,target:Number(t.vaOddOneOut)||0,unit:'Q'},
+  {key:'vaFillBlank',label:'Fill in the Blank',done:Number(s.varc.va.fillBlank)||0,target:Number(t.vaFillBlank)||0,unit:'Q'},
+  {key:'vaParaSummary',label:'Para Summary',done:Number(s.varc.va.paraSummary)||0,target:Number(t.vaParaSummary)||0,unit:'Q'}
+ ];
+ vaItems.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
+ var vaTotal=vaItems.reduce(function(a,x){return a+x.done},0),vaTarget=vaItems.reduce(function(a,x){return a+x.target},0);
  var rows=[
   {key:'rc',label:'VARC — RC',done:rcDone(s),target:Number(t.rc)||0,unit:'RC'},
-  {key:'va',label:'VARC — VA',done:vaDone(s),target:Number(t.va)||0,unit:'Q'},
+  {key:'va',label:'VARC — VA',done:vaTotal,target:vaTarget,unit:'Q',group:'va'},
+  vaItems[0],vaItems[1],vaItems[2],vaItems[3],
   {key:'dilr',label:'DILR sets',done:dilrDone(s),target:Number(t.dilr)||0,unit:'sets'},
   {key:'quant',label:'Quant questions',done:quantDone(s),target:Number(t.quant)||0,unit:'Q'},
-  {key:'cr',label:'CR practice',done:r.cr?Number(t.cr):0,target:Number(t.cr)||0,unit:'Q'},
-  {key:'geometry',label:'Geometry study',done:r.geometry?Number(t.geometry):0,target:Number(t.geometry)||0,unit:'min'},
-  {key:'aeon',label:'AEON Article',done:r.aeon?Number(t.aeon):0,target:Number(t.aeon)||0,unit:'article'}
+  {key:'cr',label:'CR practice',done:r.cr?Number(t.cr):0,target:Number(t.cr)||0,unit:'Q',manual:true},
+  {key:'aeon',label:'AEON Article',done:r.aeon?Number(t.aeon):0,target:Number(t.aeon)||0,unit:'article',manual:true}
  ];
  rows.forEach(function(x){x.met=x.target>0&&x.done>=x.target});
- return {rows:rows,score:rows.every(function(x){return x.met})?1:0};
+ return {rows:rows,vaItems:vaItems,score:rows.filter(function(x){return x.key!=='va'}).every(function(x){return x.met})?1:0};
 }
 function bearStreak(endDate){var d=new Date(endDate+'T12:00:00'),n=0;while(true){var ds=d.toISOString().slice(0,10);if(bearMetrics(ds).score!==1)break;n++;d.setDate(d.getDate()-1)}return n}
-function bearHistory(days,endDate){var out=[],d=new Date(endDate+'T12:00:00');for(var i=days-1;i>=0;i--){var x=new Date(d);x.setDate(d.getDate()-i);var ds=x.toISOString().slice(0,10),m=bearMetrics(ds);out.push({date:ds,score:m.score,rows:m.rows,total:m.rows.reduce(function(a,r){return a+r.done},0),targetTotal:m.rows.reduce(function(a,r){return a+r.target},0)})}return out}
+function bearHistory(days,endDate){var out=[],d=new Date(endDate+'T12:00:00');for(var i=days-1;i>=0;i--){var x=new Date(d);x.setDate(d.getDate()-i);var ds=x.toISOString().slice(0,10),m=bearMetrics(ds),rows=m.rows.filter(function(r){return r.key!=='va'});out.push({date:ds,score:m.score,rows:rows,total:rows.reduce(function(a,r){return a+r.done},0),targetTotal:rows.reduce(function(a,r){return a+r.target},0)})}return out}
 function renderBear(){
  var host=document.querySelector('#bearView');
  if(!host)return;
