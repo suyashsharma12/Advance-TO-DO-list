@@ -264,7 +264,7 @@ function getSession(date){
  var base=blankSession(),src=state.dailySessions[date];
  base.studyHours=Number(src.studyHours)||0;base.notes=src.notes||'';base.updatedAt=src.updatedAt||null;
  base.varc.rc=(src.varc&&Array.isArray(src.varc.rc)?src.varc.rc.slice(0,10):base.varc.rc).concat(Array(10).fill(false)).slice(0,10);
- var legacyVa=src.varc&&src.varc.va||{};if(legacyVa.paraJumble===undefined)legacyVa.paraJumble=Number(legacyVa.other)||0;if(legacyVa.oddOneOut===undefined)legacyVa.oddOneOut=Number(legacyVa.oddSentence)||0;if(legacyVa.fillBlank===undefined)legacyVa.fillBlank=Number(legacyVa.paraCompletion)||0;base.varc.va=Object.assign(base.varc.va,legacyVa);
+ var legacyVa=src.varc&&src.varc.va||{};if(legacyVa.paraJumble===undefined)legacyVa.paraJumble=Number(legacyVa.other)||0;if(legacyVa.oddOneOut===undefined)legacyVa.oddOneOut=Number(legacyVa.oddSentence)||0;if(legacyVa.fillBlank===undefined)legacyVa.fillBlank=Number(legacyVa.paraCompletion)||0;delete legacyVa.other;delete legacyVa.oddSentence;delete legacyVa.paraCompletion;base.varc.va=Object.assign(base.varc.va,legacyVa);
  base.dilr.sets=(src.dilr&&Array.isArray(src.dilr.sets)?src.dilr.sets.slice(0,10):base.dilr.sets).concat(Array(10).fill(false)).slice(0,10);
  Object.keys(quantTopics).forEach(function(g){Object.keys(base.quant[g]).forEach(function(t){base.quant[g][t]=Number(src.quant&&src.quant[g]&&src.quant[g][t])||0})});
  state.dailySessions[date]=base;
@@ -378,7 +378,7 @@ function getBearTargets(){
   if(raw.vaParaSummary===undefined)raw.vaParaSummary=legacyVa-Number(raw.vaParajumble)-Number(raw.vaOddOneOut)-Number(raw.vaFillBlank);
  }
  var merged=Object.assign({},BEAR_DEFAULT_TARGETS,raw);
- delete merged.va;delete merged.geometry;delete merged.log;
+ delete merged.va;delete merged.geometry;delete merged.log;delete raw.va;delete raw.geometry;delete raw.log;
  state.bearTargets=merged;
  return merged;
 }
